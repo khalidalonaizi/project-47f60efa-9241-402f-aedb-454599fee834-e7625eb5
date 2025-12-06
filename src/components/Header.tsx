@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Heart, Menu, Phone, User, X } from "lucide-react";
+import { Building2, Heart, Menu, Phone, Search, User, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: "للبيع", href: "#" },
-    { label: "للإيجار", href: "#" },
-    { label: "المشاريع الجديدة", href: "#" },
+    { label: "للبيع", href: "/search?type=sale" },
+    { label: "للإيجار", href: "/search?type=rent" },
+    { label: "البحث المتقدم", href: "/search" },
     { label: "التمويل العقاري", href: "#" },
     { label: "دليل الأحياء", href: "#" },
   ];
@@ -18,23 +19,23 @@ const Header = () => {
       <div className="container">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <Building2 className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">عقارات</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
-                href={link.href}
+                to={link.href}
                 className="text-muted-foreground hover:text-primary transition-colors font-medium"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -78,13 +79,13 @@ const Header = () => {
           <div className="lg:hidden py-4 border-t border-border animate-fade-in">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.label}
-                  href={link.href}
+                  to={link.href}
                   className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
               <div className="flex gap-2 mt-4 px-4">
                 <Button variant="outline" className="flex-1">
