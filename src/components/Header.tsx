@@ -1,10 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Heart, Menu, Phone, Search, User, X } from "lucide-react";
+import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const navLinks = [
     { label: "للبيع", href: "/search?type=sale" },
@@ -13,6 +23,11 @@ const Header = () => {
     { label: "التمويل العقاري", href: "#" },
     { label: "دليل الأحياء", href: "#" },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -49,17 +64,69 @@ const Header = () => {
               <span className="text-sm">اتصل بنا</span>
             </a>
             
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Heart className="w-5 h-5" />
-            </Button>
+            {user && (
+              <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                <Link to="/favorites">
+                  <Heart className="w-5 h-5" />
+                </Link>
+              </Button>
+            )}
 
-            <Button variant="outline" className="hidden md:flex gap-2">
-              <User className="w-4 h-4" />
-              تسجيل الدخول
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="hidden md:flex gap-2">
+                    <User className="w-4 h-4" />
+                    حسابي
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-properties" className="flex items-center gap-2 cursor-pointer">
+                      <List className="w-4 h-4" />
+                      إعلاناتي
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/add-property" className="flex items-center gap-2 cursor-pointer">
+                      <Plus className="w-4 h-4" />
+                      إضافة إعلان
+                    </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center gap-2 cursor-pointer text-primary">
+                          <Shield className="w-4 h-4" />
+                          لوحة الإدارة
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 cursor-pointer text-destructive"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    تسجيل الخروج
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" className="hidden md:flex gap-2" asChild>
+                <Link to="/auth">
+                  <User className="w-4 h-4" />
+                  تسجيل الدخول
+                </Link>
+              </Button>
+            )}
 
-            <Button variant="hero" className="hidden sm:flex">
-              أضف إعلانك
+            <Button variant="hero" className="hidden sm:flex" asChild>
+              <Link to={user ? "/add-property" : "/auth"}>
+                أضف إعلانك
+              </Link>
             </Button>
 
             {/* Mobile Menu Button */}
@@ -83,17 +150,59 @@ const Header = () => {
                   key={link.label}
                   to={link.href}
                   className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
+              
+              {user && (
+                <>
+                  <Link
+                    to="/my-properties"
+                    className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    إعلاناتي
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="py-2 px-4 text-primary hover:bg-accent rounded-lg transition-colors font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      لوحة الإدارة
+                    </Link>
+                  )}
+                </>
+              )}
+              
               <div className="flex gap-2 mt-4 px-4">
-                <Button variant="outline" className="flex-1">
-                  تسجيل الدخول
-                </Button>
-                <Button variant="hero" className="flex-1">
-                  أضف إعلانك
-                </Button>
+                {user ? (
+                  <>
+                    <Button variant="outline" className="flex-1" onClick={handleSignOut}>
+                      تسجيل الخروج
+                    </Button>
+                    <Button variant="hero" className="flex-1" asChild>
+                      <Link to="/add-property" onClick={() => setIsMenuOpen(false)}>
+                        أضف إعلانك
+                      </Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" className="flex-1" asChild>
+                      <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                        تسجيل الدخول
+                      </Link>
+                    </Button>
+                    <Button variant="hero" className="flex-1" asChild>
+                      <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                        أضف إعلانك
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
