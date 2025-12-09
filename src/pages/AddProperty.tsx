@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Building2, MapPin, BedDouble, Bath, Ruler, ChevronLeft } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
+import { Building2, MapPin, BedDouble, Bath, Ruler, ChevronLeft, ImageIcon } from 'lucide-react';
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, { message: 'العنوان يجب أن يكون 5 أحرف على الأقل' }),
@@ -74,6 +75,7 @@ const AddProperty = () => {
   const [bathrooms, setBathrooms] = useState('0');
   const [area, setArea] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -150,6 +152,7 @@ const AddProperty = () => {
       bathrooms: parseInt(bathrooms),
       area: parseFloat(area),
       amenities: selectedAmenities,
+      images: images,
       is_approved: false,
       status: 'pending',
     });
@@ -338,6 +341,22 @@ const AddProperty = () => {
                     {errors.price && <p className="text-destructive text-sm mt-1">{errors.price}</p>}
                   </div>
                 </div>
+              </div>
+
+              {/* Images */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5 text-primary" />
+                  صور العقار
+                </h3>
+                {user && (
+                  <ImageUpload
+                    userId={user.id}
+                    onImagesChange={setImages}
+                    existingImages={images}
+                    maxImages={10}
+                  />
+                )}
               </div>
 
               {/* Amenities */}

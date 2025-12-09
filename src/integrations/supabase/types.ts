@@ -87,7 +87,9 @@ export type Database = {
           images: string[] | null
           is_approved: boolean | null
           is_featured: boolean | null
+          latitude: number | null
           listing_type: string
+          longitude: number | null
           neighborhood: string | null
           price: number
           property_type: string
@@ -109,7 +111,9 @@ export type Database = {
           images?: string[] | null
           is_approved?: boolean | null
           is_featured?: boolean | null
+          latitude?: number | null
           listing_type?: string
+          longitude?: number | null
           neighborhood?: string | null
           price: number
           property_type?: string
@@ -131,7 +135,9 @@ export type Database = {
           images?: string[] | null
           is_approved?: boolean | null
           is_featured?: boolean | null
+          latitude?: number | null
           listing_type?: string
+          longitude?: number | null
           neighborhood?: string | null
           price?: number
           property_type?: string

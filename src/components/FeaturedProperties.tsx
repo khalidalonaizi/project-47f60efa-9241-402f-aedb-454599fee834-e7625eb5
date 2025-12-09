@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 const properties = [
   {
-    id: 1,
+    id: "1",
     title: "فيلا فاخرة في حي الملقا",
     price: 3500000,
     priceType: "sale" as const,
@@ -18,7 +18,7 @@ const properties = [
     isFeatured: true,
   },
   {
-    id: 2,
+    id: "2",
     title: "شقة حديثة في جدة",
     price: 1200000,
     priceType: "sale" as const,
@@ -31,7 +31,7 @@ const properties = [
     isFeatured: true,
   },
   {
-    id: 3,
+    id: "3",
     title: "شقة للإيجار في الدمام",
     price: 4500,
     priceType: "rent" as const,
@@ -44,7 +44,7 @@ const properties = [
     isNew: true,
   },
   {
-    id: 4,
+    id: "4",
     title: "فيلا دوبلكس في الخبر",
     price: 2800000,
     priceType: "sale" as const,
@@ -56,7 +56,7 @@ const properties = [
     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
   },
   {
-    id: 5,
+    id: "5",
     title: "شقة فاخرة مطلة على البحر",
     price: 8000,
     priceType: "rent" as const,
@@ -69,7 +69,7 @@ const properties = [
     isFeatured: true,
   },
   {
-    id: 6,
+    id: "6",
     title: "مجمع سكني جديد",
     price: 1800000,
     priceType: "sale" as const,

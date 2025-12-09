@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Heart, MapPin, Maximize } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 interface PropertyCardProps {
-  id: number;
+  id: string;
   title: string;
   price: number;
   priceType: "sale" | "rent";
@@ -18,6 +19,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({
+  id,
   title,
   price,
   priceType,
@@ -37,7 +39,7 @@ const PropertyCard = ({
   };
 
   return (
-    <div className="group bg-card rounded-2xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300">
+    <Link to={`/property/${id}`} className="block group bg-card rounded-2xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300">
       {/* Image */}
       <div className="relative h-52 overflow-hidden">
         <img
@@ -104,7 +106,7 @@ const PropertyCard = ({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

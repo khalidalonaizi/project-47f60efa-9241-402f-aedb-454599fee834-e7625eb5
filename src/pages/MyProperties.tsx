@@ -190,13 +190,17 @@ const MyProperties = () => {
                       </p>
                       
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 ml-1" />
-                          عرض
+                        <Button size="sm" variant="outline" asChild>
+                          <Link to={`/property/${property.id}`}>
+                            <Eye className="h-4 w-4 ml-1" />
+                            عرض
+                          </Link>
                         </Button>
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4 ml-1" />
-                          تعديل
+                        <Button size="sm" variant="outline" asChild>
+                          <Link to={`/edit-property/${property.id}`}>
+                            <Edit className="h-4 w-4 ml-1" />
+                            تعديل
+                          </Link>
                         </Button>
                         <Button
                           size="sm"

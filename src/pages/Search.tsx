@@ -68,7 +68,7 @@ const SearchPage = () => {
   // بيانات وهمية للعقارات
   const properties = [
     {
-      id: 1,
+      id: "1",
       title: "فيلا فاخرة مع مسبح خاص",
       price: 3500000,
       priceType: "sale" as const,
@@ -82,7 +82,7 @@ const SearchPage = () => {
       isFeatured: true,
     },
     {
-      id: 2,
+      id: "2",
       title: "شقة حديثة بإطلالة بحرية",
       price: 850000,
       priceType: "sale" as const,
@@ -95,7 +95,7 @@ const SearchPage = () => {
       isNew: true,
     },
     {
-      id: 3,
+      id: "3",
       title: "دوبلكس عصري في موقع مميز",
       price: 15000,
       priceType: "rent" as const,
@@ -108,7 +108,7 @@ const SearchPage = () => {
       isFeatured: true,
     },
     {
-      id: 4,
+      id: "4",
       title: "شقة مفروشة للإيجار",
       price: 8000,
       priceType: "rent" as const,
@@ -120,7 +120,7 @@ const SearchPage = () => {
       image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
     },
     {
-      id: 5,
+      id: "5",
       title: "فيلا مودرن بتصميم فريد",
       price: 4200000,
       priceType: "sale" as const,
@@ -133,7 +133,7 @@ const SearchPage = () => {
       isNew: true,
     },
     {
-      id: 6,
+      id: "6",
       title: "شقة استثمارية بعائد مميز",
       price: 650000,
       priceType: "sale" as const,
@@ -145,7 +145,7 @@ const SearchPage = () => {
       image: "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
     },
     {
-      id: 7,
+      id: "7",
       title: "تاون هاوس في مجمع سكني",
       price: 2100000,
       priceType: "sale" as const,
@@ -158,7 +158,7 @@ const SearchPage = () => {
       isFeatured: true,
     },
     {
-      id: 8,
+      id: "8",
       title: "شقة فاخرة مع تراس واسع",
       price: 12000,
       priceType: "rent" as const,
