@@ -78,36 +78,60 @@ const Admin = () => {
   }, [user, isAdmin]);
 
   const fetchData = async () => {
-    // Fetch properties with user profiles
-    const { data: propertiesData } = await supabase
-      .from('properties')
-      .select(`
-        *,
-        profiles!properties_user_id_fkey(full_name)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      // Fetch properties
+      const { data: propertiesData, error: propError } = await supabase
+        .from('properties')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    // Fetch users
-    const { data: usersData } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+      if (propError) {
+        console.error('Error fetching properties:', propError);
+      }
 
-    if (propertiesData) {
-      setProperties(propertiesData as unknown as Property[]);
+      // Fetch users
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+      }
+
+      // Fetch profile names for properties
+      let propertiesWithProfiles: Property[] = [];
+      if (propertiesData) {
+        const userIds = [...new Set(propertiesData.map(p => p.user_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
+
+        const profilesMap = new Map(profilesData?.map(p => [p.user_id, p.full_name]) || []);
+        
+        propertiesWithProfiles = propertiesData.map(p => ({
+          ...p,
+          profiles: { full_name: profilesMap.get(p.user_id) || null }
+        })) as Property[];
+      }
+
+      setProperties(propertiesWithProfiles);
       setStats({
-        totalProperties: propertiesData.length,
-        pendingProperties: propertiesData.filter((p) => p.status === 'pending').length,
-        approvedProperties: propertiesData.filter((p) => p.is_approved).length,
+        totalProperties: propertiesData?.length || 0,
+        pendingProperties: propertiesData?.filter((p) => p.status === 'pending').length || 0,
+        approvedProperties: propertiesData?.filter((p) => p.is_approved).length || 0,
         totalUsers: usersData?.length || 0,
       });
-    }
 
-    if (usersData) {
-      setUsers(usersData);
+      if (usersData) {
+        setUsers(usersData);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleApprove = async (id: string) => {

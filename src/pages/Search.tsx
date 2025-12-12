@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,29 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import { Filter, Grid3X3, List, MapPin, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Filter, Grid3X3, List, MapPin, RotateCcw, Search, SlidersHorizontal, Loader2 } from "lucide-react";
+
+interface Property {
+  id: string;
+  title: string;
+  price: number;
+  listing_type: string;
+  neighborhood: string | null;
+  city: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area: number | null;
+  images: string[] | null;
+  is_featured: boolean | null;
+  property_type: string;
+  amenities: string[] | null;
+  created_at: string;
+}
 
 const SearchPage = () => {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
   const [listingType, setListingType] = useState<"sale" | "rent">("sale");
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [areaRange, setAreaRange] = useState([0, 1000]);
@@ -42,14 +62,14 @@ const SearchPage = () => {
   ];
 
   const propertyTypes = [
-    "شقة",
-    "فيلا",
-    "دوبلكس",
-    "تاون هاوس",
-    "أرض",
-    "مكتب",
-    "محل تجاري",
-    "مستودع",
+    { value: "apartment", label: "شقة" },
+    { value: "villa", label: "فيلا" },
+    { value: "duplex", label: "دوبلكس" },
+    { value: "townhouse", label: "تاون هاوس" },
+    { value: "land", label: "أرض" },
+    { value: "office", label: "مكتب" },
+    { value: "commercial", label: "محل تجاري" },
+    { value: "warehouse", label: "مستودع" },
   ];
 
   const amenities = [
@@ -65,111 +85,25 @@ const SearchPage = () => {
 
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
-  // بيانات وهمية للعقارات
-  const properties = [
-    {
-      id: "1",
-      title: "فيلا فاخرة مع مسبح خاص",
-      price: 3500000,
-      priceType: "sale" as const,
-      location: "حي النرجس",
-      city: "الرياض",
-      bedrooms: 5,
-      bathrooms: 4,
-      area: 450,
-      image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
-      isNew: true,
-      isFeatured: true,
-    },
-    {
-      id: "2",
-      title: "شقة حديثة بإطلالة بحرية",
-      price: 850000,
-      priceType: "sale" as const,
-      location: "حي الشاطئ",
-      city: "جدة",
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 180,
-      image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
-      isNew: true,
-    },
-    {
-      id: "3",
-      title: "دوبلكس عصري في موقع مميز",
-      price: 15000,
-      priceType: "rent" as const,
-      location: "حي العليا",
-      city: "الرياض",
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 280,
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800",
-      isFeatured: true,
-    },
-    {
-      id: "4",
-      title: "شقة مفروشة للإيجار",
-      price: 8000,
-      priceType: "rent" as const,
-      location: "حي الحمراء",
-      city: "جدة",
-      bedrooms: 2,
-      bathrooms: 1,
-      area: 120,
-      image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-    },
-    {
-      id: "5",
-      title: "فيلا مودرن بتصميم فريد",
-      price: 4200000,
-      priceType: "sale" as const,
-      location: "حي الياسمين",
-      city: "الرياض",
-      bedrooms: 6,
-      bathrooms: 5,
-      area: 550,
-      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
-      isNew: true,
-    },
-    {
-      id: "6",
-      title: "شقة استثمارية بعائد مميز",
-      price: 650000,
-      priceType: "sale" as const,
-      location: "حي السلامة",
-      city: "جدة",
-      bedrooms: 2,
-      bathrooms: 2,
-      area: 95,
-      image: "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
-    },
-    {
-      id: "7",
-      title: "تاون هاوس في مجمع سكني",
-      price: 2100000,
-      priceType: "sale" as const,
-      location: "حي الملقا",
-      city: "الرياض",
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 320,
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
-      isFeatured: true,
-    },
-    {
-      id: "8",
-      title: "شقة فاخرة مع تراس واسع",
-      price: 12000,
-      priceType: "rent" as const,
-      location: "حي الروضة",
-      city: "الدمام",
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 200,
-      image: "https://images.unsplash.com/photo-1560184897-ae75f418493e?w=800",
-    },
-  ];
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching properties:', error);
+    } else {
+      setProperties(data || []);
+    }
+    setLoading(false);
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(price);
@@ -187,17 +121,21 @@ const SearchPage = () => {
   };
 
   const filteredProperties = properties.filter((property) => {
-    if (listingType === "sale" && property.priceType !== "sale") return false;
-    if (listingType === "rent" && property.priceType !== "rent") return false;
+    if (listingType === "sale" && property.listing_type !== "sale") return false;
+    if (listingType === "rent" && property.listing_type !== "rent") return false;
     if (city && property.city !== city) return false;
+    if (propertyType && property.property_type !== propertyType) return false;
     if (bedrooms && property.bedrooms !== parseInt(bedrooms)) return false;
     if (bathrooms && property.bathrooms !== parseInt(bathrooms)) return false;
-    if (property.area < areaRange[0] || property.area > areaRange[1]) return false;
+    if (property.area && (property.area < areaRange[0] || property.area > areaRange[1])) return false;
     if (property.price < priceRange[0] || property.price > priceRange[1]) return false;
-    if (searchQuery && !property.title.includes(searchQuery) && !property.location.includes(searchQuery)) return false;
+    if (searchQuery && !property.title.includes(searchQuery) && !property.neighborhood?.includes(searchQuery)) return false;
+    if (selectedAmenities.length > 0) {
+      const propAmenities = property.amenities || [];
+      if (!selectedAmenities.every(a => propAmenities.includes(a))) return false;
+    }
     return true;
   });
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -296,8 +234,8 @@ const SearchPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {propertyTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -446,7 +384,11 @@ const SearchPage = () => {
             </div>
 
             {/* Results Grid */}
-            {filteredProperties.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : filteredProperties.length > 0 ? (
               <div
                 className={
                   viewMode === "grid"
@@ -455,7 +397,20 @@ const SearchPage = () => {
                 }
               >
                 {filteredProperties.map((property) => (
-                  <PropertyCard key={property.id} {...property} />
+                  <PropertyCard 
+                    key={property.id} 
+                    id={property.id}
+                    title={property.title}
+                    price={property.price}
+                    priceType={property.listing_type as "sale" | "rent"}
+                    location={property.neighborhood || property.city}
+                    city={property.city}
+                    bedrooms={property.bedrooms || 0}
+                    bathrooms={property.bathrooms || 0}
+                    area={property.area || 0}
+                    image={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800"}
+                    isFeatured={property.is_featured || false}
+                  />
                 ))}
               </div>
             ) : (
