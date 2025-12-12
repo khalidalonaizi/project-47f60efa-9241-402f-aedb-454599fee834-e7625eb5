@@ -20,8 +20,8 @@ const Header = () => {
     { label: "للبيع", href: "/search?type=sale" },
     { label: "للإيجار", href: "/search?type=rent" },
     { label: "البحث المتقدم", href: "/search" },
-    { label: "التمويل العقاري", href: "#" },
-    { label: "دليل الأحياء", href: "#" },
+    { label: "التمويل العقاري", href: "/financing" },
+    { label: "دليل الأحياء", href: "/neighborhood-guide" },
   ];
 
   const handleSignOut = async () => {
