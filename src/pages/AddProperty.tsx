@@ -153,8 +153,8 @@ const AddProperty = () => {
       area: parseFloat(area),
       amenities: selectedAmenities,
       images: images,
-      is_approved: false,
-      status: 'pending',
+      is_approved: true,
+      status: 'approved',
     });
 
     setIsLoading(false);
@@ -168,7 +168,7 @@ const AddProperty = () => {
     } else {
       toast({
         title: 'تم بنجاح!',
-        description: 'تم إضافة إعلانك وسيتم مراجعته قريباً',
+        description: 'تم نشر إعلانك بنجاح',
       });
       navigate('/my-properties');
     }
