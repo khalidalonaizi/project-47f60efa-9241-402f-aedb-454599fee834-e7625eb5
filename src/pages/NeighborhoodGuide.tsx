@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Search, Building2, Users, ShoppingBag, GraduationCap, Heart, Car } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import NeighborhoodMap from "@/components/NeighborhoodMap";
 
 const neighborhoods = [
   {
@@ -23,6 +24,8 @@ const neighborhoods = [
     rating: 4.8,
     features: ["هادئ", "عائلي", "راقي"],
     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+    lat: 24.8234,
+    lng: 46.6388,
   },
   {
     id: 2,
@@ -38,6 +41,8 @@ const neighborhoods = [
     rating: 4.6,
     features: ["تجاري", "حيوي", "مركزي"],
     image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800",
+    lat: 24.6905,
+    lng: 46.6855,
   },
   {
     id: 3,
@@ -53,6 +58,8 @@ const neighborhoods = [
     rating: 4.9,
     features: ["ساحلي", "فاخر", "سياحي"],
     image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+    lat: 21.5574,
+    lng: 39.1132,
   },
   {
     id: 4,
@@ -68,6 +75,8 @@ const neighborhoods = [
     rating: 4.4,
     features: ["تاريخي", "مركزي", "متنوع"],
     image: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800",
+    lat: 21.5441,
+    lng: 39.1729,
   },
   {
     id: 5,
@@ -83,6 +92,8 @@ const neighborhoods = [
     rating: 4.5,
     features: ["عائلي", "هادئ", "أخضر"],
     image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
+    lat: 26.4250,
+    lng: 50.0920,
   },
   {
     id: 6,
@@ -98,12 +109,15 @@ const neighborhoods = [
     rating: 4.7,
     features: ["حديث", "راقي", "متكامل"],
     image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800",
+    lat: 24.8133,
+    lng: 46.6103,
   },
 ];
 
 const NeighborhoodGuide = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<number | null>(null);
 
   const cities = [...new Set(neighborhoods.map((n) => n.city))];
 
@@ -116,6 +130,16 @@ const NeighborhoodGuide = () => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
+
+  const mapNeighborhoods = filteredNeighborhoods.map(n => ({
+    id: n.id,
+    name: n.name,
+    city: n.city,
+    lat: n.lat,
+    lng: n.lng,
+    avgPrice: n.avgPrice,
+    rating: n.rating,
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -159,6 +183,19 @@ const NeighborhoodGuide = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Map Section */}
+      <div className="container py-8">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-primary" />
+          الأحياء على الخريطة
+        </h2>
+        <NeighborhoodMap 
+          neighborhoods={mapNeighborhoods}
+          selectedNeighborhood={selectedNeighborhood}
+          onNeighborhoodSelect={setSelectedNeighborhood}
+        />
       </div>
 
       {/* Neighborhoods Grid */}

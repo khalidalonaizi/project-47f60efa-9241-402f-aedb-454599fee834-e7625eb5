@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,9 @@ import {
   AlertTriangle,
   TrendingUp,
   User,
-  Briefcase
+  Briefcase,
+  Printer,
+  Car
 } from "lucide-react";
 
 const banks = [
@@ -82,6 +84,22 @@ const Financing = () => {
   const [monthlyObligations, setMonthlyObligations] = useState(0);
   const [age, setAge] = useState(30);
   const [sector, setSector] = useState<'government' | 'private' | 'military'>('private');
+  
+  // Personal Loan (5 years)
+  const [hasPersonalLoan, setHasPersonalLoan] = useState(false);
+  const [personalLoanAmount, setPersonalLoanAmount] = useState(50000);
+  const [personalLoanRate, setPersonalLoanRate] = useState(5);
+  
+  // Car Loan
+  const [hasCarLoan, setHasCarLoan] = useState(false);
+  const [carLoanInstallment, setCarLoanInstallment] = useState(1500);
+  
+  // Credit Card
+  const [hasCreditCard, setHasCreditCard] = useState(false);
+  const [creditCardLimit, setCreditCardLimit] = useState(20000);
+
+  // Print ref
+  const printRef = useRef<HTMLDivElement>(null);
 
   const loanAmount = propertyPrice - downPayment;
   const monthlyRate = interestRate / 100 / 12;
@@ -96,13 +114,256 @@ const Financing = () => {
   const totalPayment = monthlyPayment * numberOfPayments;
   const totalInterest = totalPayment - loanAmount;
 
+  // Calculate personal loan monthly installment (5 years = 60 months)
+  const personalLoanMonthlyRate = personalLoanRate / 100 / 12;
+  const personalLoanMonths = 60;
+  const personalLoanInstallment = useMemo(() => {
+    if (!hasPersonalLoan) return 0;
+    if (personalLoanMonthlyRate === 0) return personalLoanAmount / personalLoanMonths;
+    return personalLoanAmount * (personalLoanMonthlyRate * Math.pow(1 + personalLoanMonthlyRate, personalLoanMonths)) / 
+      (Math.pow(1 + personalLoanMonthlyRate, personalLoanMonths) - 1);
+  }, [hasPersonalLoan, personalLoanAmount, personalLoanMonthlyRate]);
+
+  // Credit card monthly obligation (5% of limit as per Saudi banks)
+  const creditCardMonthlyObligation = hasCreditCard ? creditCardLimit * 0.05 : 0;
+  
+  // Car loan obligation
+  const carLoanObligation = hasCarLoan ? carLoanInstallment : 0;
+
+  // Total calculated obligations
+  const calculatedObligations = personalLoanInstallment + creditCardMonthlyObligation + carLoanObligation + monthlyObligations;
+
   // Customer calculations
   const totalIncome = salary + otherIncome;
-  const totalObligationsWithLoan = monthlyObligations + monthlyPayment;
+  const totalObligationsWithLoan = calculatedObligations + monthlyPayment;
   const dti = (totalObligationsWithLoan / totalIncome) * 100; // Debt-to-Income ratio
   const remainingIncome = totalIncome - totalObligationsWithLoan;
   const maxRetirementAge = sector === 'military' ? 55 : 60;
   const maxTenureByAge = Math.max(5, maxRetirementAge - age);
+
+  // Print function
+  const handlePrint = () => {
+    const printContent = printRef.current;
+    if (!printContent) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const currentDate = new Date().toLocaleDateString('ar-SA');
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="utf-8">
+        <title>تقرير التمويل العقاري</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            padding: 40px; 
+            direction: rtl;
+            background: #fff;
+          }
+          .header { 
+            text-align: center; 
+            border-bottom: 3px solid #3b82f6; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
+          }
+          .header h1 { color: #1f2937; font-size: 28px; margin-bottom: 5px; }
+          .header p { color: #6b7280; }
+          .section { margin-bottom: 25px; }
+          .section-title { 
+            background: #3b82f6; 
+            color: white; 
+            padding: 10px 15px; 
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+          }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+          .item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 10px; 
+            background: #f9fafb; 
+            border-radius: 5px;
+          }
+          .item-label { color: #6b7280; }
+          .item-value { font-weight: bold; color: #1f2937; }
+          .highlight { 
+            background: #dbeafe; 
+            padding: 20px; 
+            border-radius: 10px; 
+            text-align: center;
+            margin: 20px 0;
+          }
+          .highlight-value { font-size: 32px; color: #3b82f6; font-weight: bold; }
+          .highlight-label { color: #6b7280; margin-top: 5px; }
+          .eligibility { padding: 15px; border-radius: 5px; margin-top: 20px; }
+          .eligible { background: #dcfce7; border: 2px solid #22c55e; }
+          .not-eligible { background: #fee2e2; border: 2px solid #ef4444; }
+          .footer { 
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #e5e7eb; 
+            text-align: center; 
+            color: #9ca3af;
+            font-size: 12px;
+          }
+          @media print {
+            body { padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>تقرير التمويل العقاري</h1>
+          <p>تاريخ التقرير: ${currentDate}</p>
+        </div>
+
+        <div class="highlight">
+          <div class="highlight-value">${formatPrice(monthlyPayment)} ر.س</div>
+          <div class="highlight-label">القسط الشهري المتوقع</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">تفاصيل العقار</div>
+          <div class="grid">
+            <div class="item">
+              <span class="item-label">سعر العقار</span>
+              <span class="item-value">${formatPrice(propertyPrice)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">الدفعة الأولى</span>
+              <span class="item-value">${formatPrice(downPayment)} ر.س (${downPaymentPercentage}%)</span>
+            </div>
+            <div class="item">
+              <span class="item-label">مبلغ التمويل</span>
+              <span class="item-value">${formatPrice(loanAmount)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">مدة التمويل</span>
+              <span class="item-value">${tenure} سنة (${numberOfPayments} شهر)</span>
+            </div>
+            <div class="item">
+              <span class="item-label">معدل الربح</span>
+              <span class="item-value">${interestRate}%</span>
+            </div>
+            <div class="item">
+              <span class="item-label">إجمالي الأرباح</span>
+              <span class="item-value">${formatPrice(totalInterest)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">إجمالي المبلغ</span>
+              <span class="item-value">${formatPrice(totalPayment)} ر.س</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">البيانات المالية للعميل</div>
+          <div class="grid">
+            <div class="item">
+              <span class="item-label">العمر</span>
+              <span class="item-value">${age} سنة</span>
+            </div>
+            <div class="item">
+              <span class="item-label">قطاع العمل</span>
+              <span class="item-value">${sector === 'government' ? 'حكومي' : sector === 'private' ? 'خاص' : 'عسكري'}</span>
+            </div>
+            <div class="item">
+              <span class="item-label">الراتب الشهري</span>
+              <span class="item-value">${formatPrice(salary)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">دخل إضافي</span>
+              <span class="item-value">${formatPrice(otherIncome)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">إجمالي الدخل</span>
+              <span class="item-value">${formatPrice(totalIncome)} ر.س</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">الالتزامات المالية الشهرية</div>
+          <div class="grid">
+            ${hasPersonalLoan ? `
+            <div class="item">
+              <span class="item-label">قرض شخصي (5 سنوات)</span>
+              <span class="item-value">${formatPrice(personalLoanInstallment)} ر.س</span>
+            </div>
+            ` : ''}
+            ${hasCarLoan ? `
+            <div class="item">
+              <span class="item-label">قسط سيارة</span>
+              <span class="item-value">${formatPrice(carLoanObligation)} ر.س</span>
+            </div>
+            ` : ''}
+            ${hasCreditCard ? `
+            <div class="item">
+              <span class="item-label">بطاقة ائتمان (5% من الحد)</span>
+              <span class="item-value">${formatPrice(creditCardMonthlyObligation)} ر.س</span>
+            </div>
+            ` : ''}
+            <div class="item">
+              <span class="item-label">التزامات أخرى</span>
+              <span class="item-value">${formatPrice(monthlyObligations)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">قسط التمويل العقاري</span>
+              <span class="item-value">${formatPrice(monthlyPayment)} ر.س</span>
+            </div>
+            <div class="item" style="background: #dbeafe;">
+              <span class="item-label"><strong>إجمالي الالتزامات</strong></span>
+              <span class="item-value" style="color: #3b82f6;"><strong>${formatPrice(totalObligationsWithLoan)} ر.س</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">ملخص الوضع المالي</div>
+          <div class="grid">
+            <div class="item">
+              <span class="item-label">نسبة الاستقطاع (DTI)</span>
+              <span class="item-value" style="color: ${dti > 65 ? '#ef4444' : '#22c55e'};">${dti.toFixed(1)}%</span>
+            </div>
+            <div class="item">
+              <span class="item-label">الدخل المتبقي</span>
+              <span class="item-value" style="color: ${remainingIncome >= 2000 ? '#22c55e' : '#ef4444'};">${formatPrice(remainingIncome)} ر.س</span>
+            </div>
+            <div class="item">
+              <span class="item-label">أقصى مدة تمويل (حسب العمر)</span>
+              <span class="item-value">${maxTenureByAge} سنة</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="eligibility ${isEligible ? 'eligible' : 'not-eligible'}">
+          <strong style="font-size: 18px;">${isEligible ? '✓ مؤهل للتمويل' : '✗ غير مؤهل حالياً'}</strong>
+          <p style="margin-top: 10px; color: #6b7280;">
+            ${isEligible ? `متوافق مع ${eligibleBanks.length} بنك` : 'يرجى مراجعة المتطلبات'}
+          </p>
+        </div>
+
+        <div class="footer">
+          <p>هذا التقرير للأغراض الإرشادية فقط ولا يمثل عرضاً رسمياً للتمويل</p>
+          <p>يرجى التواصل مع البنك للحصول على عرض رسمي</p>
+        </div>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
 
   // Eligibility checks
   const eligibilityChecks = useMemo(() => {
@@ -364,32 +625,158 @@ const Financing = () => {
                       />
                     </div>
 
-                    {/* Monthly Obligations */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <Label className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" />
-                          الالتزامات الشهرية
-                        </Label>
-                        <span className="text-primary font-bold">{formatPrice(monthlyObligations)} ر.س</span>
+                    {/* Monthly Obligations Section */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <Label className="font-bold text-base">الالتزامات الشهرية</Label>
+                      
+                      {/* Personal Loan Toggle */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            قرض شخصي (5 سنوات)
+                          </Label>
+                          <Button 
+                            variant={hasPersonalLoan ? 'default' : 'outline'} 
+                            size="sm"
+                            onClick={() => setHasPersonalLoan(!hasPersonalLoan)}
+                          >
+                            {hasPersonalLoan ? 'مفعل' : 'غير مفعل'}
+                          </Button>
+                        </div>
+                        {hasPersonalLoan && (
+                          <div className="space-y-3 pr-6 border-r-2 border-primary/20">
+                            <div className="flex justify-between text-sm">
+                              <span>مبلغ القرض</span>
+                              <span className="text-primary font-bold">{formatPrice(personalLoanAmount)} ر.س</span>
+                            </div>
+                            <Slider
+                              value={[personalLoanAmount]}
+                              onValueChange={(v) => setPersonalLoanAmount(v[0])}
+                              min={10000}
+                              max={300000}
+                              step={5000}
+                            />
+                            <div className="flex justify-between text-sm">
+                              <span>معدل الربح</span>
+                              <span className="text-primary font-bold">{personalLoanRate}%</span>
+                            </div>
+                            <Slider
+                              value={[personalLoanRate]}
+                              onValueChange={(v) => setPersonalLoanRate(v[0])}
+                              min={3}
+                              max={10}
+                              step={0.5}
+                            />
+                            <div className="bg-muted p-2 rounded text-sm">
+                              القسط الشهري: <strong className="text-primary">{formatPrice(personalLoanInstallment)} ر.س</strong>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <Slider
-                        value={[monthlyObligations]}
-                        onValueChange={(v) => setMonthlyObligations(v[0])}
-                        min={0}
-                        max={totalIncome * 0.5}
-                        step={100}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        تشمل أقساط السيارة، البطاقات الائتمانية، القروض الأخرى
-                      </p>
+
+                      {/* Car Loan Toggle */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="flex items-center gap-2">
+                            <Car className="w-4 h-4" />
+                            قسط سيارة
+                          </Label>
+                          <Button 
+                            variant={hasCarLoan ? 'default' : 'outline'} 
+                            size="sm"
+                            onClick={() => setHasCarLoan(!hasCarLoan)}
+                          >
+                            {hasCarLoan ? 'مفعل' : 'غير مفعل'}
+                          </Button>
+                        </div>
+                        {hasCarLoan && (
+                          <div className="space-y-3 pr-6 border-r-2 border-primary/20">
+                            <div className="flex justify-between text-sm">
+                              <span>القسط الشهري</span>
+                              <span className="text-primary font-bold">{formatPrice(carLoanInstallment)} ر.س</span>
+                            </div>
+                            <Slider
+                              value={[carLoanInstallment]}
+                              onValueChange={(v) => setCarLoanInstallment(v[0])}
+                              min={500}
+                              max={10000}
+                              step={100}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Credit Card Toggle */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            بطاقة ائتمان
+                          </Label>
+                          <Button 
+                            variant={hasCreditCard ? 'default' : 'outline'} 
+                            size="sm"
+                            onClick={() => setHasCreditCard(!hasCreditCard)}
+                          >
+                            {hasCreditCard ? 'مفعل' : 'غير مفعل'}
+                          </Button>
+                        </div>
+                        {hasCreditCard && (
+                          <div className="space-y-3 pr-6 border-r-2 border-primary/20">
+                            <div className="flex justify-between text-sm">
+                              <span>الحد الائتماني</span>
+                              <span className="text-primary font-bold">{formatPrice(creditCardLimit)} ر.س</span>
+                            </div>
+                            <Slider
+                              value={[creditCardLimit]}
+                              onValueChange={(v) => setCreditCardLimit(v[0])}
+                              min={5000}
+                              max={100000}
+                              step={5000}
+                            />
+                            <div className="bg-muted p-2 rounded text-sm">
+                              الالتزام الشهري (5%): <strong className="text-primary">{formatPrice(creditCardMonthlyObligation)} ر.س</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Other Obligations */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <Label className="flex items-center gap-2">
+                            <Wallet className="w-4 h-4" />
+                            التزامات أخرى
+                          </Label>
+                          <span className="text-primary font-bold">{formatPrice(monthlyObligations)} ر.س</span>
+                        </div>
+                        <Slider
+                          value={[monthlyObligations]}
+                          onValueChange={(v) => setMonthlyObligations(v[0])}
+                          min={0}
+                          max={totalIncome * 0.3}
+                          step={100}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          أقساط إضافية غير مذكورة أعلاه
+                        </p>
+                      </div>
+
+                      {/* Total Obligations Summary */}
+                      <div className="bg-primary/5 p-4 rounded-lg border">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">إجمالي الالتزامات (بدون التمويل العقاري)</span>
+                          <span className="text-lg font-bold text-primary">{formatPrice(calculatedObligations)} ر.س</span>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Results */}
-              <div className="space-y-6">
+              <div className="space-y-6" ref={printRef}>
                 <Card className="bg-primary text-primary-foreground">
                   <CardContent className="p-6">
                     <div className="text-center">
@@ -398,6 +785,12 @@ const Financing = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Print Button */}
+                <Button onClick={handlePrint} variant="outline" className="w-full">
+                  <Printer className="w-4 h-4 ml-2" />
+                  طباعة التقرير (PDF)
+                </Button>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Card>

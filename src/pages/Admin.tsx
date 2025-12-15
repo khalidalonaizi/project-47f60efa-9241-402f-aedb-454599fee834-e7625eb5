@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,9 @@ import {
   Calendar,
   BarChart3,
   Star,
-  Filter
+  Filter,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 import {
   Select,
@@ -35,6 +37,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import * as XLSX from 'xlsx';
 
 interface Property {
   id: string;
@@ -260,6 +264,78 @@ const Admin = () => {
   // Get unique cities for filter
   const cities = [...new Set(properties.map(p => p.city))];
 
+  // Prepare chart data
+  const propertyTypeData = properties.reduce((acc, p) => {
+    const type = p.property_type || 'غير محدد';
+    const existing = acc.find(item => item.name === type);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ name: type, value: 1 });
+    }
+    return acc;
+  }, [] as { name: string; value: number }[]);
+
+  const cityData = properties.reduce((acc, p) => {
+    const city = p.city || 'غير محدد';
+    const existing = acc.find(item => item.name === city);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ name: city, value: 1 });
+    }
+    return acc;
+  }, [] as { name: string; value: number }[]);
+
+  const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+  // Export functions
+  const exportPropertiesToExcel = () => {
+    const data = filteredProperties.map(p => ({
+      'العنوان': p.title,
+      'المدينة': p.city,
+      'السعر': p.price,
+      'النوع': p.property_type,
+      'نوع الإعلان': p.listing_type === 'sale' ? 'للبيع' : 'للإيجار',
+      'الحالة': p.is_approved ? 'منشور' : p.status === 'pending' ? 'قيد المراجعة' : 'مرفوض',
+      'مميز': p.is_featured ? 'نعم' : 'لا',
+      'غرف النوم': p.bedrooms || 0,
+      'الحمامات': p.bathrooms || 0,
+      'المساحة': p.area || 0,
+      'تاريخ الإنشاء': new Date(p.created_at).toLocaleDateString('ar-SA'),
+      'المالك': p.profiles?.full_name || 'غير معروف',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'العقارات');
+    XLSX.writeFile(workbook, `العقارات_${new Date().toLocaleDateString('ar-SA')}.xlsx`);
+    
+    toast({
+      title: 'تم التصدير',
+      description: 'تم تصدير بيانات العقارات إلى ملف Excel',
+    });
+  };
+
+  const exportUsersToExcel = () => {
+    const data = filteredUsers.map(u => ({
+      'الاسم': u.full_name || 'بدون اسم',
+      'رقم الهاتف': u.phone || 'بدون رقم',
+      'عدد الإعلانات': u.propertiesCount || 0,
+      'تاريخ التسجيل': new Date(u.created_at).toLocaleDateString('ar-SA'),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'المستخدمين');
+    XLSX.writeFile(workbook, `المستخدمين_${new Date().toLocaleDateString('ar-SA')}.xlsx`);
+    
+    toast({
+      title: 'تم التصدير',
+      description: 'تم تصدير بيانات المستخدمين إلى ملف Excel',
+    });
+  };
+
   // Filter properties
   const filteredProperties = properties.filter(p => {
     if (searchQuery && !p.title.includes(searchQuery) && !p.city.includes(searchQuery)) {
@@ -451,6 +527,53 @@ const Admin = () => {
                 </Card>
               </div>
 
+              {/* Charts Section */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">توزيع العقارات حسب النوع</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={propertyTypeData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {propertyTypeData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">توزيع العقارات حسب المدينة</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={cityData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#3b82f6" name="عدد العقارات" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Recent Properties */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -535,6 +658,10 @@ const Admin = () => {
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <h1 className="text-2xl font-bold">إدارة الإعلانات</h1>
                 <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" onClick={exportPropertiesToExcel}>
+                    <FileSpreadsheet className="h-4 w-4 ml-1" />
+                    تصدير Excel
+                  </Button>
                   <div className="relative">
                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -682,14 +809,20 @@ const Admin = () => {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <h1 className="text-2xl font-bold">إدارة المستخدمين</h1>
-                <div className="relative">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="بحث بالاسم أو الهاتف..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pr-9 w-64"
-                  />
+                <div className="flex gap-2 items-center">
+                  <Button variant="outline" size="sm" onClick={exportUsersToExcel}>
+                    <FileSpreadsheet className="h-4 w-4 ml-1" />
+                    تصدير Excel
+                  </Button>
+                  <div className="relative">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="بحث بالاسم أو الهاتف..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pr-9 w-64"
+                    />
+                  </div>
                 </div>
               </div>
 
