@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Bath, Bed, Heart, MapPin, Maximize } from "lucide-react";
+import { Bath, Bed, Heart, MapPin, Maximize, GitCompare } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -16,6 +16,8 @@ interface PropertyCardProps {
   image: string;
   isNew?: boolean;
   isFeatured?: boolean;
+  isCompareSelected?: boolean;
+  onCompareToggle?: (id: string) => void;
 }
 
 const PropertyCard = ({
@@ -31,11 +33,25 @@ const PropertyCard = ({
   image,
   isNew,
   isFeatured,
+  isCompareSelected,
+  onCompareToggle,
 }: PropertyCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(price);
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+  };
+
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onCompareToggle?.(id);
   };
 
   return (
@@ -58,17 +74,32 @@ const PropertyCard = ({
           )}
         </div>
 
-        {/* Favorite Button */}
-        <button
-          onClick={() => setIsFavorite(!isFavorite)}
-          className="absolute top-3 left-3 w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
-        >
-          <Heart
-            className={`w-5 h-5 transition-colors ${
-              isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"
-            }`}
-          />
-        </button>
+        {/* Action Buttons */}
+        <div className="absolute top-3 left-3 flex gap-2">
+          {onCompareToggle && (
+            <button
+              onClick={handleCompareClick}
+              className={`w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${
+                isCompareSelected 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-card/80 hover:bg-card text-muted-foreground"
+              }`}
+              title="إضافة للمقارنة"
+            >
+              <GitCompare className="w-5 h-5" />
+            </button>
+          )}
+          <button
+            onClick={handleFavoriteClick}
+            className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors"
+          >
+            <Heart
+              className={`w-5 h-5 transition-colors ${
+                isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground"
+              }`}
+            />
+          </button>
+        </div>
 
         {/* Price Tag */}
         <div className="absolute bottom-3 right-3 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-bold">

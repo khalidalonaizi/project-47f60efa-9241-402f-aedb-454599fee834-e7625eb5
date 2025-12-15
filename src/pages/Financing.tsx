@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,10 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 import { 
   Calculator, 
   Banknote, 
@@ -25,7 +30,9 @@ import {
   User,
   Briefcase,
   Printer,
-  Car
+  Car,
+  Save,
+  FolderOpen
 } from "lucide-react";
 
 const banks = [
@@ -71,7 +78,14 @@ const banks = [
   },
 ];
 
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat("ar-SA").format(Math.round(price));
+};
+
 const Financing = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
   // Property details
   const [propertyPrice, setPropertyPrice] = useState(1000000);
   const [downPayment, setDownPayment] = useState(200000);
@@ -98,12 +112,18 @@ const Financing = () => {
   const [hasCreditCard, setHasCreditCard] = useState(false);
   const [creditCardLimit, setCreditCardLimit] = useState(20000);
 
+  // Save report
+  const [reportName, setReportName] = useState("");
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
 
   const loanAmount = propertyPrice - downPayment;
   const monthlyRate = interestRate / 100 / 12;
   const numberOfPayments = tenure * 12;
+  const downPaymentPercentage = Math.round((downPayment / propertyPrice) * 100);
   
   const monthlyPayment = useMemo(() => {
     if (monthlyRate === 0) return loanAmount / numberOfPayments;
@@ -141,15 +161,67 @@ const Financing = () => {
   const maxRetirementAge = sector === 'military' ? 55 : 60;
   const maxTenureByAge = Math.max(5, maxRetirementAge - age);
 
+  // Eligibility checks
+  const eligibilityChecks = useMemo(() => {
+    const checks = [];
+    
+    if (salary >= 5000) {
+      checks.push({ label: "الراتب يتجاوز الحد الأدنى", passed: true });
+    } else {
+      checks.push({ label: "الراتب أقل من الحد الأدنى (5,000 ر.س)", passed: false });
+    }
+    
+    if (dti <= 65) {
+      checks.push({ label: `نسبة الاستقطاع ${dti.toFixed(1)}% (مقبولة)`, passed: true });
+    } else {
+      checks.push({ label: `نسبة الاستقطاع ${dti.toFixed(1)}% (تتجاوز 65%)`, passed: false });
+    }
+    
+    if (tenure <= maxTenureByAge) {
+      checks.push({ label: "مدة التمويل مناسبة لعمرك", passed: true });
+    } else {
+      checks.push({ label: `الحد الأقصى للتمويل ${maxTenureByAge} سنة بناءً على عمرك`, passed: false });
+    }
+    
+    const downPaymentPercent = (downPayment / propertyPrice) * 100;
+    if (downPaymentPercent >= 10) {
+      checks.push({ label: `الدفعة الأولى ${downPaymentPercent.toFixed(0)}% (مقبولة)`, passed: true });
+    } else {
+      checks.push({ label: "الدفعة الأولى يجب أن تكون 10% على الأقل", passed: false });
+    }
+    
+    if (remainingIncome >= 2000) {
+      checks.push({ label: "الدخل المتبقي كافٍ للمعيشة", passed: true });
+    } else {
+      checks.push({ label: "الدخل المتبقي أقل من 2,000 ر.س", passed: false });
+    }
+    
+    return checks;
+  }, [salary, dti, tenure, maxTenureByAge, downPayment, propertyPrice, remainingIncome]);
+
+  const isEligible = eligibilityChecks.every(check => check.passed);
+  const eligibleBanks = banks.filter(bank => 
+    salary >= bank.minSalary && 
+    dti <= bank.maxDti && 
+    tenure <= bank.maxTenure &&
+    loanAmount <= bank.maxAmount
+  );
+
   // Print function
   const handlePrint = () => {
-    const printContent = printRef.current;
-    if (!printContent) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
     const currentDate = new Date().toLocaleDateString('ar-SA');
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "خطأ",
+        description: "تعذر فتح نافذة الطباعة. يرجى السماح بالنوافذ المنبثقة.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const sectorLabel = sector === 'government' ? 'حكومي' : sector === 'private' ? 'خاص' : 'عسكري';
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -255,10 +327,6 @@ const Financing = () => {
               <span class="item-label">إجمالي الأرباح</span>
               <span class="item-value">${formatPrice(totalInterest)} ر.س</span>
             </div>
-            <div class="item">
-              <span class="item-label">إجمالي المبلغ</span>
-              <span class="item-value">${formatPrice(totalPayment)} ر.س</span>
-            </div>
           </div>
         </div>
 
@@ -271,7 +339,7 @@ const Financing = () => {
             </div>
             <div class="item">
               <span class="item-label">قطاع العمل</span>
-              <span class="item-value">${sector === 'government' ? 'حكومي' : sector === 'private' ? 'خاص' : 'عسكري'}</span>
+              <span class="item-value">${sectorLabel}</span>
             </div>
             <div class="item">
               <span class="item-label">الراتب الشهري</span>
@@ -285,41 +353,9 @@ const Financing = () => {
               <span class="item-label">إجمالي الدخل</span>
               <span class="item-value">${formatPrice(totalIncome)} ر.س</span>
             </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">الالتزامات المالية الشهرية</div>
-          <div class="grid">
-            ${hasPersonalLoan ? `
             <div class="item">
-              <span class="item-label">قرض شخصي (5 سنوات)</span>
-              <span class="item-value">${formatPrice(personalLoanInstallment)} ر.س</span>
-            </div>
-            ` : ''}
-            ${hasCarLoan ? `
-            <div class="item">
-              <span class="item-label">قسط سيارة</span>
-              <span class="item-value">${formatPrice(carLoanObligation)} ر.س</span>
-            </div>
-            ` : ''}
-            ${hasCreditCard ? `
-            <div class="item">
-              <span class="item-label">بطاقة ائتمان (5% من الحد)</span>
-              <span class="item-value">${formatPrice(creditCardMonthlyObligation)} ر.س</span>
-            </div>
-            ` : ''}
-            <div class="item">
-              <span class="item-label">التزامات أخرى</span>
-              <span class="item-value">${formatPrice(monthlyObligations)} ر.س</span>
-            </div>
-            <div class="item">
-              <span class="item-label">قسط التمويل العقاري</span>
-              <span class="item-value">${formatPrice(monthlyPayment)} ر.س</span>
-            </div>
-            <div class="item" style="background: #dbeafe;">
-              <span class="item-label"><strong>إجمالي الالتزامات</strong></span>
-              <span class="item-value" style="color: #3b82f6;"><strong>${formatPrice(totalObligationsWithLoan)} ر.س</strong></span>
+              <span class="item-label">إجمالي الالتزامات</span>
+              <span class="item-value">${formatPrice(totalObligationsWithLoan)} ر.س</span>
             </div>
           </div>
         </div>
@@ -335,17 +371,13 @@ const Financing = () => {
               <span class="item-label">الدخل المتبقي</span>
               <span class="item-value" style="color: ${remainingIncome >= 2000 ? '#22c55e' : '#ef4444'};">${formatPrice(remainingIncome)} ر.س</span>
             </div>
-            <div class="item">
-              <span class="item-label">أقصى مدة تمويل (حسب العمر)</span>
-              <span class="item-value">${maxTenureByAge} سنة</span>
-            </div>
           </div>
         </div>
 
         <div class="eligibility ${isEligible ? 'eligible' : 'not-eligible'}">
           <strong style="font-size: 18px;">${isEligible ? '✓ مؤهل للتمويل' : '✗ غير مؤهل حالياً'}</strong>
           <p style="margin-top: 10px; color: #6b7280;">
-            ${isEligible ? `متوافق مع ${eligibleBanks.length} بنك` : 'يرجى مراجعة المتطلبات'}
+            ${isEligible ? 'متوافق مع ' + eligibleBanks.length + ' بنك' : 'يرجى مراجعة المتطلبات'}
           </p>
         </div>
 
@@ -361,66 +393,79 @@ const Financing = () => {
     printWindow.focus();
     setTimeout(() => {
       printWindow.print();
-      printWindow.close();
-    }, 250);
+    }, 500);
   };
 
-  // Eligibility checks
-  const eligibilityChecks = useMemo(() => {
-    const checks = [];
-    
-    // Salary check
-    if (salary >= 5000) {
-      checks.push({ label: "الراتب يتجاوز الحد الأدنى", passed: true });
-    } else {
-      checks.push({ label: "الراتب أقل من الحد الأدنى (5,000 ر.س)", passed: false });
+  // Save report function
+  const handleSaveReport = async () => {
+    if (!user) {
+      toast({
+        title: "يجب تسجيل الدخول",
+        description: "يرجى تسجيل الدخول لحفظ التقرير",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    // DTI check
-    if (dti <= 65) {
-      checks.push({ label: `نسبة الاستقطاع ${dti.toFixed(1)}% (مقبولة)`, passed: true });
-    } else {
-      checks.push({ label: `نسبة الاستقطاع ${dti.toFixed(1)}% (تتجاوز 65%)`, passed: false });
-    }
-    
-    // Age check
-    if (tenure <= maxTenureByAge) {
-      checks.push({ label: "مدة التمويل مناسبة لعمرك", passed: true });
-    } else {
-      checks.push({ label: `الحد الأقصى للتمويل ${maxTenureByAge} سنة بناءً على عمرك`, passed: false });
-    }
-    
-    // Down payment check
-    const downPaymentPercent = (downPayment / propertyPrice) * 100;
-    if (downPaymentPercent >= 10) {
-      checks.push({ label: `الدفعة الأولى ${downPaymentPercent.toFixed(0)}% (مقبولة)`, passed: true });
-    } else {
-      checks.push({ label: "الدفعة الأولى يجب أن تكون 10% على الأقل", passed: false });
-    }
-    
-    // Remaining income check
-    if (remainingIncome >= 2000) {
-      checks.push({ label: "الدخل المتبقي كافٍ للمعيشة", passed: true });
-    } else {
-      checks.push({ label: "الدخل المتبقي أقل من 2,000 ر.س", passed: false });
-    }
-    
-    return checks;
-  }, [salary, dti, tenure, maxTenureByAge, downPayment, propertyPrice, remainingIncome]);
 
-  const isEligible = eligibilityChecks.every(check => check.passed);
-  const eligibleBanks = banks.filter(bank => 
-    salary >= bank.minSalary && 
-    dti <= bank.maxDti && 
-    tenure <= bank.maxTenure &&
-    loanAmount <= bank.maxAmount
-  );
+    if (!reportName.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم للتقرير",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await supabase.from('saved_financing_reports').insert({
+      user_id: user.id,
+      report_name: reportName,
+      property_price: propertyPrice,
+      down_payment: downPayment,
+      loan_amount: loanAmount,
+      tenure,
+      interest_rate: interestRate,
+      monthly_payment: monthlyPayment,
+      total_payment: totalPayment,
+      total_interest: totalInterest,
+      salary,
+      other_income: otherIncome,
+      total_obligations: calculatedObligations,
+      dti,
+      remaining_income: remainingIncome,
+      age,
+      sector,
+      is_eligible: isEligible,
+      eligible_banks_count: eligibleBanks.length,
+      has_personal_loan: hasPersonalLoan,
+      personal_loan_amount: personalLoanAmount,
+      has_car_loan: hasCarLoan,
+      car_loan_installment: carLoanInstallment,
+      has_credit_card: hasCreditCard,
+      credit_card_limit: creditCardLimit,
+    });
+
+    setSaving(false);
+    setSaveDialogOpen(false);
+
+    if (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ التقرير",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "تم الحفظ",
+        description: "تم حفظ التقرير بنجاح",
+      });
+      setReportName("");
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(Math.round(price));
   };
-
-  const downPaymentPercentage = Math.round((downPayment / propertyPrice) * 100);
 
   return (
     <div className="min-h-screen bg-background">

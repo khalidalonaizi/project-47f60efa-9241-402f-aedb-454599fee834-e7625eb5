@@ -148,6 +148,117 @@ export type Database = {
         }
         Relationships: []
       }
+      property_comparisons: {
+        Row: {
+          created_at: string
+          id: string
+          property_ids: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_ids: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_ids?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_financing_reports: {
+        Row: {
+          age: number
+          car_loan_installment: number | null
+          created_at: string
+          credit_card_limit: number | null
+          down_payment: number
+          dti: number
+          eligible_banks_count: number | null
+          has_car_loan: boolean | null
+          has_credit_card: boolean | null
+          has_personal_loan: boolean | null
+          id: string
+          interest_rate: number
+          is_eligible: boolean
+          loan_amount: number
+          monthly_payment: number
+          other_income: number | null
+          personal_loan_amount: number | null
+          property_price: number
+          remaining_income: number
+          report_name: string
+          salary: number
+          sector: string
+          tenure: number
+          total_interest: number
+          total_obligations: number | null
+          total_payment: number
+          user_id: string
+        }
+        Insert: {
+          age: number
+          car_loan_installment?: number | null
+          created_at?: string
+          credit_card_limit?: number | null
+          down_payment: number
+          dti: number
+          eligible_banks_count?: number | null
+          has_car_loan?: boolean | null
+          has_credit_card?: boolean | null
+          has_personal_loan?: boolean | null
+          id?: string
+          interest_rate: number
+          is_eligible: boolean
+          loan_amount: number
+          monthly_payment: number
+          other_income?: number | null
+          personal_loan_amount?: number | null
+          property_price: number
+          remaining_income: number
+          report_name: string
+          salary: number
+          sector: string
+          tenure: number
+          total_interest: number
+          total_obligations?: number | null
+          total_payment: number
+          user_id: string
+        }
+        Update: {
+          age?: number
+          car_loan_installment?: number | null
+          created_at?: string
+          credit_card_limit?: number | null
+          down_payment?: number
+          dti?: number
+          eligible_banks_count?: number | null
+          has_car_loan?: boolean | null
+          has_credit_card?: boolean | null
+          has_personal_loan?: boolean | null
+          id?: string
+          interest_rate?: number
+          is_eligible?: boolean
+          loan_amount?: number
+          monthly_payment?: number
+          other_income?: number | null
+          personal_loan_amount?: number | null
+          property_price?: number
+          remaining_income?: number
+          report_name?: string
+          salary?: number
+          sector?: string
+          tenure?: number
+          total_interest?: number
+          total_obligations?: number | null
+          total_payment?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
