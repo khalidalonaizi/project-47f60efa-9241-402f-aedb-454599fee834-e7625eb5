@@ -571,11 +571,11 @@ const Financing = () => {
           <div class="grid">
             <div class="item">
               <span class="item-label">نسبة الاستقطاع (DTI)</span>
-              <span class="item-value" style="color: ${dti > 65 ? '#ef4444' : '#22c55e'};">${safeDti}%</span>
+              <span class="item-value" style="color: ${Number(dti) > 65 ? '#ef4444' : '#22c55e'};">${safeDti}%</span>
             </div>
             <div class="item">
               <span class="item-label">الدخل المتبقي</span>
-              <span class="item-value" style="color: ${remainingIncome >= 2000 ? '#22c55e' : '#ef4444'};">${safeRemainingIncome} ر.س</span>
+              <span class="item-value" style="color: ${Number(remainingIncome) >= 2000 ? '#22c55e' : '#ef4444'};">${safeRemainingIncome} ر.س</span>
             </div>
           </div>
         </div>
