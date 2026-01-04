@@ -47,12 +47,26 @@ const HomeMapSection = () => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
 
-  // Fetch API key
+  // Fetch API key (requires authentication)
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
+        // Check if user is authenticated first
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setError('يرجى تسجيل الدخول لعرض الخريطة');
+          return;
+        }
+
         const { data, error } = await supabase.functions.invoke('get-google-maps-key');
-        if (error) throw error;
+        if (error) {
+          if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+            setError('يرجى تسجيل الدخول لعرض الخريطة');
+          } else {
+            throw error;
+          }
+          return;
+        }
         if (data?.apiKey) {
           setApiKey(data.apiKey);
         } else {
