@@ -15,6 +15,7 @@ serve(async (req) => {
     // Verify authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.log('No authorization header provided')
       return new Response(
         JSON.stringify({ error: 'Unauthorized - No authorization header' }),
         { 
@@ -24,18 +25,19 @@ serve(async (req) => {
       )
     }
 
+    // Extract the token from the Authorization header
+    const token = authHeader.replace('Bearer ', '')
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-    })
+    // Use service role key to verify the user's token
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     
-    if (authError || !user) {
+    if (authError) {
+      console.log('Auth error:', authError.message)
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Invalid token' }),
         { 
@@ -44,10 +46,24 @@ serve(async (req) => {
         }
       )
     }
+    
+    if (!user) {
+      console.log('No user found for token')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - User not found' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('User authenticated:', user.id)
 
     const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
     
     if (!apiKey) {
+      console.log('Google Maps API key not configured')
       return new Response(
         JSON.stringify({ error: 'Google Maps API key not configured' }),
         { 
@@ -57,6 +73,7 @@ serve(async (req) => {
       )
     }
 
+    console.log('Returning API key successfully')
     return new Response(
       JSON.stringify({ apiKey }),
       { 
@@ -66,6 +83,7 @@ serve(async (req) => {
     )
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in get-google-maps-key:', message)
     return new Response(
       JSON.stringify({ error: message }),
       { 
