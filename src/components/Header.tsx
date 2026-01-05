@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List, MessageSquare, Bell } from "lucide-react";
+import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import NotificationBell from "@/components/NotificationBell";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,11 +84,14 @@ const Header = () => {
             </a>
             
             {user && (
-              <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
-                <Link to="/favorites">
-                  <Heart className="w-5 h-5" />
-                </Link>
-              </Button>
+              <>
+                <NotificationBell />
+                <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                  <Link to="/favorites">
+                    <Heart className="w-5 h-5" />
+                  </Link>
+                </Button>
+              </>
             )}
 
             {user ? (
@@ -125,9 +129,9 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/price-alerts" className="flex items-center gap-2 cursor-pointer">
-                      <Bell className="w-4 h-4" />
-                      تنبيهات الأسعار
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                      <User className="w-4 h-4" />
+                      الملف الشخصي
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
