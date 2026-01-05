@@ -16,6 +16,7 @@ import Financing from "./pages/Financing";
 import SavedReports from "./pages/SavedReports";
 import Messages from "./pages/Messages";
 import PriceAlerts from "./pages/PriceAlerts";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/saved-reports" element={<SavedReports />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/price-alerts" element={<PriceAlerts />} />
+            <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
