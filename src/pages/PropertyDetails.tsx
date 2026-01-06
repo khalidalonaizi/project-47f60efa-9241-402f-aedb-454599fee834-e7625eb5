@@ -19,7 +19,6 @@ import {
   Bath, 
   Ruler, 
   Heart, 
-  Share2, 
   Phone, 
   Mail,
   User,
@@ -28,6 +27,7 @@ import {
   Check,
   Star
 } from 'lucide-react';
+import SocialShareButtons from '@/components/SocialShareButtons';
 
 interface Property {
   id: string;
@@ -296,9 +296,11 @@ const PropertyDetails = () => {
                     <Button variant="outline" size="icon" onClick={toggleFavorite}>
                       <Heart className={`h-5 w-5 ${isFavorite ? 'fill-destructive text-destructive' : ''}`} />
                     </Button>
-                    <Button variant="outline" size="icon" onClick={handleShare}>
-                      <Share2 className="h-5 w-5" />
-                    </Button>
+                    <SocialShareButtons
+                      url={window.location.href}
+                      title={property.title}
+                      description={`${property.title} - ${property.city} - ${property.price.toLocaleString()} ريال`}
+                    />
                   </div>
                 </div>
 

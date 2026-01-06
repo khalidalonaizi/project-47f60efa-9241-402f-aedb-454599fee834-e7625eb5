@@ -37,8 +37,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Link } from 'react-router-dom';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, AreaChart, Area } from 'recharts';
 import * as XLSX from 'xlsx';
+import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 interface Property {
   id: string;
@@ -327,6 +329,64 @@ const Admin = () => {
 
   const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
+  // Prepare monthly trend data (last 6 months)
+  const last6Months = eachMonthOfInterval({
+    start: subMonths(new Date(), 5),
+    end: new Date()
+  });
+
+  const monthlyPropertyData = last6Months.map(month => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    const count = properties.filter(p => {
+      const date = new Date(p.created_at);
+      return date >= monthStart && date <= monthEnd;
+    }).length;
+    return {
+      month: format(month, 'MMM', { locale: ar }),
+      عقارات: count
+    };
+  });
+
+  const monthlyUserData = last6Months.map(month => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    const count = users.filter(u => {
+      const date = new Date(u.created_at);
+      return date >= monthStart && date <= monthEnd;
+    }).length;
+    return {
+      month: format(month, 'MMM', { locale: ar }),
+      مستخدمين: count
+    };
+  });
+
+  // Listing type data (sale vs rent)
+  const listingTypeData = [
+    { name: 'للبيع', value: properties.filter(p => p.listing_type === 'sale').length },
+    { name: 'للإيجار', value: properties.filter(p => p.listing_type === 'rent').length }
+  ];
+
+  // Status data
+  const statusData = [
+    { name: 'منشور', value: stats.approvedProperties, color: '#22c55e' },
+    { name: 'قيد المراجعة', value: stats.pendingProperties, color: '#f59e0b' },
+    { name: 'مرفوض', value: properties.filter(p => p.status === 'rejected').length, color: '#ef4444' }
+  ];
+
+  // Price range distribution
+  const priceRanges = [
+    { range: '< 500K', min: 0, max: 500000 },
+    { range: '500K-1M', min: 500000, max: 1000000 },
+    { range: '1M-2M', min: 1000000, max: 2000000 },
+    { range: '2M-5M', min: 2000000, max: 5000000 },
+    { range: '> 5M', min: 5000000, max: Infinity }
+  ];
+
+  const priceDistribution = priceRanges.map(range => ({
+    name: range.range,
+    عقارات: properties.filter(p => p.price >= range.min && p.price < range.max).length
+  }));
   // Export functions
   const exportPropertiesToExcel = () => {
     const data = filteredProperties.map(p => ({
@@ -565,27 +625,63 @@ const Admin = () => {
                 </Card>
               </div>
 
-              {/* Charts Section */}
+              {/* Monthly Trends */}
               <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">توزيع العقارات حسب النوع</CardTitle>
+                    <CardTitle className="text-lg">نمو العقارات (آخر 6 أشهر)</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
+                      <AreaChart data={monthlyPropertyData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Area type="monotone" dataKey="عقارات" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">نمو المستخدمين (آخر 6 أشهر)</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={monthlyUserData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="مستخدمين" stroke="#22c55e" strokeWidth={2} dot={{ fill: '#22c55e' }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Charts Section */}
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">حالة الإعلانات</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
                         <Pie
-                          data={propertyTypeData}
+                          data={statusData}
                           cx="50%"
                           cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                          outerRadius={80}
-                          fill="#8884d8"
+                          innerRadius={40}
+                          outerRadius={70}
                           dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}`}
                         >
-                          {propertyTypeData.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
                         <Tooltip />
@@ -596,21 +692,91 @@ const Admin = () => {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">توزيع العقارات حسب المدينة</CardTitle>
+                    <CardTitle className="text-lg">نوع الإعلان</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={cityData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={listingTypeData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={70}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}`}
+                        >
+                          <Cell fill="#3b82f6" />
+                          <Cell fill="#22c55e" />
+                        </Pie>
                         <Tooltip />
-                        <Bar dataKey="value" fill="#3b82f6" name="عدد العقارات" />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">توزيع العقارات حسب النوع</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={propertyTypeData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={70}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {propertyTypeData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value, name) => [value, name]} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">توزيع الأسعار</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={priceDistribution} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis dataKey="name" type="category" width={60} />
+                        <Tooltip />
+                        <Bar dataKey="عقارات" fill="#8b5cf6" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
               </div>
+
+              {/* City Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">توزيع العقارات حسب المدينة</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={cityData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#3b82f6" name="عدد العقارات" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
 
               {/* Recent Properties */}
               <Card>
