@@ -39,7 +39,7 @@ const resetPasswordSchema = z.object({
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
-  const isResetMode = searchParams.get('reset') === 'true';
+  const isResetModeFromUrl = searchParams.get('reset') === 'true';
   
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -53,11 +53,29 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(isResetModeFromUrl);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { toast } = useToast();
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  // Listen for PASSWORD_RECOVERY event from Supabase
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsResetMode(true);
+      }
+    });
+
+    // Also check URL hash for recovery token (Supabase sends tokens in hash)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get('type') === 'recovery') {
+      setIsResetMode(true);
+    }
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (user && !isResetMode) {
@@ -224,9 +242,15 @@ const Auth = () => {
     setIsLoading(false);
 
     if (error) {
+      let errorMessage = 'حدث خطأ أثناء إعادة تعيين كلمة المرور';
+      if (error.message.includes('Auth session missing')) {
+        errorMessage = 'انتهت صلاحية الرابط. يرجى طلب رابط إعادة تعيين جديد';
+      } else if (error.message.includes('same password')) {
+        errorMessage = 'لا يمكن استخدام نفس كلمة المرور القديمة';
+      }
       toast({
         title: 'خطأ',
-        description: 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
+        description: errorMessage,
         variant: 'destructive',
       });
     } else {
@@ -267,7 +291,11 @@ const Auth = () => {
               <Button 
                 className="w-full" 
                 variant="hero"
-                onClick={() => navigate('/auth')}
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  setIsResetMode(false);
+                  navigate('/auth');
+                }}
               >
                 الذهاب لتسجيل الدخول
               </Button>
