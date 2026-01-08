@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Building2, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Building2, Mail, Lock, User, ArrowRight, CheckCircle } from 'lucide-react';
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email({ message: 'البريد الإلكتروني غير صالح' }),
@@ -29,7 +29,18 @@ const signupSchema = z.object({
   path: ['confirmPassword'],
 });
 
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'كلمات المرور غير متطابقة',
+  path: ['confirmPassword'],
+});
+
 const Auth = () => {
+  const [searchParams] = useSearchParams();
+  const isResetMode = searchParams.get('reset') === 'true';
+  
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [signupName, setSignupName] = useState('');
@@ -37,8 +48,11 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { toast } = useToast();
@@ -46,10 +60,10 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
+    if (user && !isResetMode) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isResetMode]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,6 +199,116 @@ const Auth = () => {
       setForgotPasswordEmail('');
     }
   };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    try {
+      resetPasswordSchema.parse({ password: newPassword, confirmPassword: confirmNewPassword });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        err.errors.forEach((error) => {
+          if (error.path[0]) {
+            newErrors[error.path[0].toString()] = error.message;
+          }
+        });
+        setErrors(newErrors);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
+        variant: 'destructive',
+      });
+    } else {
+      setResetSuccess(true);
+      toast({
+        title: 'تم بنجاح! 🎉',
+        description: 'تم إعادة تعيين كلمة المرور بنجاح',
+      });
+    }
+  };
+
+  // Show reset password form if coming from reset link
+  if (isResetMode) {
+    return (
+      <div className="min-h-screen hero-gradient flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-primary/10 rounded-full">
+                {resetSuccess ? (
+                  <CheckCircle className="h-8 w-8 text-green-500" />
+                ) : (
+                  <Lock className="h-8 w-8 text-primary" />
+                )}
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold">
+              {resetSuccess ? 'تم إعادة تعيين كلمة المرور' : 'إعادة تعيين كلمة المرور'}
+            </CardTitle>
+            <CardDescription>
+              {resetSuccess 
+                ? 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة'
+                : 'أدخل كلمة المرور الجديدة'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {resetSuccess ? (
+              <Button 
+                className="w-full" 
+                variant="hero"
+                onClick={() => navigate('/auth')}
+              >
+                الذهاب لتسجيل الدخول
+              </Button>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="كلمة المرور الجديدة"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                  </div>
+                  {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
+                </div>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="تأكيد كلمة المرور الجديدة"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className="pr-10"
+                    />
+                  </div>
+                  {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
+                </div>
+                <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
+                  {isLoading ? 'جاري الحفظ...' : 'حفظ كلمة المرور الجديدة'}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen hero-gradient flex items-center justify-center p-4">
