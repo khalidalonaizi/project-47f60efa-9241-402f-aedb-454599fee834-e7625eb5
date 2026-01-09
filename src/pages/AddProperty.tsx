@@ -12,8 +12,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import ImageUpload from '@/components/ImageUpload';
-import { Building2, MapPin, BedDouble, Bath, Ruler, ChevronLeft, ImageIcon } from 'lucide-react';
+import ImageUploadWithCamera from '@/components/ImageUploadWithCamera';
+import LocationPicker from '@/components/LocationPicker';
+import { Building2, MapPin, BedDouble, Bath, Ruler, ChevronLeft, ImageIcon, Navigation } from 'lucide-react';
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, { message: 'العنوان يجب أن يكون 5 أحرف على الأقل' }),
@@ -74,6 +75,8 @@ const AddProperty = () => {
   const [bedrooms, setBedrooms] = useState('0');
   const [bathrooms, setBathrooms] = useState('0');
   const [area, setArea] = useState('');
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,6 +98,11 @@ const AddProperty = () => {
     } else {
       setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
     }
+  };
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    setLatitude(lat);
+    setLongitude(lng);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,6 +159,8 @@ const AddProperty = () => {
       bedrooms: parseInt(bedrooms),
       bathrooms: parseInt(bathrooms),
       area: parseFloat(area),
+      latitude,
+      longitude,
       amenities: selectedAmenities,
       images: images,
       is_approved: true,
@@ -279,6 +289,19 @@ const AddProperty = () => {
                     onChange={(e) => setNeighborhood(e.target.value)}
                   />
                 </div>
+
+                {/* Location Picker */}
+                <div className="mt-4">
+                  <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                    <Navigation className="h-4 w-4 text-primary" />
+                    تحديد الموقع على الخريطة
+                  </h4>
+                  <LocationPicker
+                    latitude={latitude}
+                    longitude={longitude}
+                    onLocationChange={handleLocationChange}
+                  />
+                </div>
               </div>
 
               {/* Details */}
@@ -350,7 +373,7 @@ const AddProperty = () => {
                   صور العقار
                 </h3>
                 {user && (
-                  <ImageUpload
+                  <ImageUploadWithCamera
                     userId={user.id}
                     onImagesChange={setImages}
                     existingImages={images}
