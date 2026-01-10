@@ -386,8 +386,12 @@ const HomeMapSection = () => {
         </Card>
 
         {/* CTA */}
-        <div className="text-center mt-8">
-          <Button size="lg" onClick={() => navigate('/search')} className="gap-2">
+        <div className="text-center mt-8 flex flex-wrap justify-center gap-4">
+          <Button size="lg" onClick={() => navigate('/map-search')} variant="hero" className="gap-2">
+            <MapPin className="w-4 h-4" />
+            البحث على الخريطة
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate('/search')} className="gap-2">
             <Search className="w-4 h-4" />
             عرض جميع العقارات
           </Button>
