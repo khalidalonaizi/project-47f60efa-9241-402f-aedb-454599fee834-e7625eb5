@@ -55,9 +55,10 @@ const propertyTypes = [
 ];
 
 const HomeMapSection = () => {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,34 +117,54 @@ const HomeMapSection = () => {
     return true;
   });
 
-  // Initialize map
+  // Initialize map after loading is complete
   useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
+    if (loading) return;
+    if (!mapContainerRef.current) return;
+    if (mapInstance.current) return;
 
-    // Initialize the map centered on Saudi Arabia
-    mapInstance.current = L.map(mapRef.current, {
-      center: [24.7136, 46.6753],
-      zoom: 6,
-      zoomControl: true,
-    });
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (!mapContainerRef.current) return;
+      
+      try {
+        // Initialize the map centered on Saudi Arabia
+        mapInstance.current = L.map(mapContainerRef.current, {
+          center: [24.7136, 46.6753],
+          zoom: 6,
+          zoomControl: true,
+        });
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(mapInstance.current);
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(mapInstance.current);
+
+        // Force a resize after initialization
+        setTimeout(() => {
+          mapInstance.current?.invalidateSize();
+        }, 100);
+
+        setMapReady(true);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
+        setMapReady(false);
       }
     };
-  }, []);
+  }, [loading]);
 
-  // Add markers when properties are loaded or filters change
+  // Add markers when map is ready and properties change
   useEffect(() => {
-    if (!mapInstance.current || loading) return;
+    if (!mapReady || !mapInstance.current) return;
 
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
@@ -189,7 +210,7 @@ const HomeMapSection = () => {
       );
       mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [filteredProperties, loading]);
+  }, [filteredProperties, mapReady]);
 
   const resetFilters = () => {
     setSelectedCity("all");
@@ -269,8 +290,8 @@ const HomeMapSection = () => {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="relative h-[500px]">
+        <Card className="overflow-hidden shadow-lg">
+          <div className="relative h-[500px]" style={{ minHeight: '500px' }}>
             {loading ? (
               <div className="flex items-center justify-center h-full bg-muted/50">
                 <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -278,7 +299,18 @@ const HomeMapSection = () => {
             ) : (
               <>
                 {/* Map Container */}
-                <div ref={mapRef} className="w-full h-full z-0" />
+                <div 
+                  ref={mapContainerRef} 
+                  className="w-full h-full" 
+                  style={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    bottom: 0,
+                    zIndex: 1 
+                  }} 
+                />
 
                 {/* Legend */}
                 <div className="absolute top-4 right-4 bg-card rounded-lg shadow-lg p-3 z-[1000]">
