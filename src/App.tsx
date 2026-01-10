@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Search from "./pages/Search";
 import Auth from "./pages/Auth";
 import AddProperty from "./pages/AddProperty";
+import EditProperty from "./pages/EditProperty";
 import MyProperties from "./pages/MyProperties";
 import Admin from "./pages/Admin";
 import PropertyDetails from "./pages/PropertyDetails";
@@ -18,6 +19,7 @@ import Messages from "./pages/Messages";
 import PriceAlerts from "./pages/PriceAlerts";
 import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
+import MapSearchPage from "./pages/MapSearchPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,8 +34,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/map-search" element={<MapSearchPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/add-property" element={<AddProperty />} />
+            <Route path="/edit-property/:id" element={<EditProperty />} />
             <Route path="/my-properties" element={<MyProperties />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
