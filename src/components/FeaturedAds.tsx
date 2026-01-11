@@ -43,7 +43,6 @@ const FeaturedAds = () => {
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .eq('is_approved', true)
         .eq('is_featured', true)
         .order('created_at', { ascending: false })
         .limit(6);
