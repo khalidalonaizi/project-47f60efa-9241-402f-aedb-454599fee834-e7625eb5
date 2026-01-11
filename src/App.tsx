@@ -11,6 +11,7 @@ import AddProperty from "./pages/AddProperty";
 import EditProperty from "./pages/EditProperty";
 import MyProperties from "./pages/MyProperties";
 import Admin from "./pages/Admin";
+import FeaturedAdsManagement from "./pages/FeaturedAdsManagement";
 import PropertyDetails from "./pages/PropertyDetails";
 import NeighborhoodGuide from "./pages/NeighborhoodGuide";
 import Financing from "./pages/Financing";
@@ -21,7 +22,6 @@ import Profile from "./pages/Profile";
 import Favorites from "./pages/Favorites";
 import MapSearchPage from "./pages/MapSearchPage";
 import NotFound from "./pages/NotFound";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,6 +40,7 @@ const App = () => (
             <Route path="/edit-property/:id" element={<EditProperty />} />
             <Route path="/my-properties" element={<MyProperties />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/featured" element={<FeaturedAdsManagement />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/neighborhood-guide" element={<NeighborhoodGuide />} />
             <Route path="/financing" element={<Financing />} />

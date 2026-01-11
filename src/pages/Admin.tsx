@@ -512,6 +512,15 @@ const Admin = () => {
               المستخدمين
               <Badge variant="secondary" className="mr-auto">{stats.totalUsers}</Badge>
             </Button>
+            
+            <div className="border-t my-4 pt-4">
+              <Link to="/admin/featured">
+                <Button variant="ghost" className="w-full justify-start gap-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  الإعلانات المميزة
+                </Button>
+              </Link>
+            </div>
           </nav>
         </aside>
 
