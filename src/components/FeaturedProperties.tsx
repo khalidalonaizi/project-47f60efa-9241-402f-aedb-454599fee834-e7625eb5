@@ -29,7 +29,6 @@ const FeaturedProperties = () => {
       const { data, error } = await supabase
         .from("properties")
         .select("*")
-        .eq("is_approved", true)
         .order("created_at", { ascending: false })
         .limit(6);
 

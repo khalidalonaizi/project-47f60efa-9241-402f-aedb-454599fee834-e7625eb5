@@ -59,6 +59,27 @@ const SendMessageDialog = ({
 
       if (error) throw error;
 
+      // Get sender profile for notification
+      const { data: senderProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .single();
+
+      // Send email notification to receiver
+      try {
+        await supabase.functions.invoke("send-message-notification", {
+          body: {
+            receiverId,
+            senderName: senderProfile?.full_name || user.email || "مستخدم",
+            subject: subject.trim(),
+            propertyTitle,
+          },
+        });
+      } catch (emailError) {
+        console.log("Email notification failed (non-critical):", emailError);
+      }
+
       toast.success("تم إرسال الرسالة بنجاح");
       setSubject(propertyTitle ? `استفسار عن: ${propertyTitle}` : "");
       setContent("");

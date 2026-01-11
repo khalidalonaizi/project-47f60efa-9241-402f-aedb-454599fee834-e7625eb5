@@ -99,7 +99,6 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .eq('is_approved', true)
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
         .limit(100);
