@@ -520,6 +520,12 @@ const Admin = () => {
                   الإعلانات المميزة
                 </Button>
               </Link>
+              <Link to="/admin/financing-offers">
+                <Button variant="ghost" className="w-full justify-start gap-2">
+                  <Building2 className="h-4 w-4 text-emerald-500" />
+                  العروض التمويلية
+                </Button>
+              </Link>
             </div>
           </nav>
         </aside>

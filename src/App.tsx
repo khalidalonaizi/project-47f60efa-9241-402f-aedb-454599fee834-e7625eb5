@@ -12,6 +12,7 @@ import EditProperty from "./pages/EditProperty";
 import MyProperties from "./pages/MyProperties";
 import Admin from "./pages/Admin";
 import FeaturedAdsManagement from "./pages/FeaturedAdsManagement";
+import FinancingOffersManagement from "./pages/FinancingOffersManagement";
 import PropertyDetails from "./pages/PropertyDetails";
 import NeighborhoodGuide from "./pages/NeighborhoodGuide";
 import Financing from "./pages/Financing";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/my-properties" element={<MyProperties />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/featured" element={<FeaturedAdsManagement />} />
+            <Route path="/admin/financing-offers" element={<FinancingOffersManagement />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/neighborhood-guide" element={<NeighborhoodGuide />} />
             <Route path="/financing" element={<Financing />} />
