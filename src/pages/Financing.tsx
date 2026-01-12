@@ -1324,27 +1324,47 @@ const Financing = () => {
           </TabsContent>
 
           <TabsContent value="offers">
-            <div className="mb-6 flex flex-wrap items-center gap-4">
-              {eligibleOffers.length > 0 ? (
-                <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-                  {eligibleOffers.length} جهة تمويل متوافقة مع بياناتك المالية
-                </Badge>
-              ) : (
-                <Badge variant="destructive">
-                  لا توجد جهات متوافقة - راجع بياناتك المالية
-                </Badge>
-              )}
-              
-              <div className="flex gap-2">
-                <Badge variant="outline" className="gap-1">
-                  <Landmark className="w-3 h-3" />
-                  بنوك
-                </Badge>
-                <Badge variant="outline" className="gap-1">
-                  <BadgeDollarSign className="w-3 h-3" />
-                  شركات تمويل
-                </Badge>
+            {/* Notice Banner */}
+            <Card className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+              <CardContent className="p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">ملاحظة هامة</p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    عروض التمويل من البنوك وشركات التمويل العقاري تخضع للمراجعة والموافقة قبل نشرها. يمكنك إضافة عرض جديد من تبويب "أضف عرض".
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                {eligibleOffers.length > 0 ? (
+                  <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                    {eligibleOffers.length} جهة تمويل متوافقة مع بياناتك المالية
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    لا توجد جهات متوافقة - راجع بياناتك المالية
+                  </Badge>
+                )}
+                
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="gap-1">
+                    <Landmark className="w-3 h-3" />
+                    بنوك
+                  </Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <BadgeDollarSign className="w-3 h-3" />
+                    شركات تمويل
+                  </Badge>
+                </div>
               </div>
+              
+              <Button onClick={() => setAddOfferOpen(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                إضافة عرض تمويلي جديد
+              </Button>
             </div>
             
             {loadingOffers ? (
@@ -1370,6 +1390,19 @@ const Financing = () => {
 
           <TabsContent value="add-offer">
             <div className="max-w-2xl mx-auto">
+              {/* Notice Banner */}
+              <Card className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-amber-800 dark:text-amber-200">ملاحظة هامة</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      جميع العروض التمويلية من البنوك وشركات التمويل العقاري تخضع للمراجعة والموافقة من قبل الإدارة قبل نشرها في الموقع.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
