@@ -206,6 +206,32 @@ const Header = () => {
                   >
                     إعلاناتي
                   </Link>
+                  <Link
+                    to="/profile"
+                    className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    الملف الشخصي
+                  </Link>
+                  <Link
+                    to="/messages"
+                    className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors flex items-center justify-between"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <span>الرسائل</span>
+                    {unreadCount > 0 && (
+                      <Badge variant="destructive" className="text-xs h-5 min-w-5 flex items-center justify-center">
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Link>
+                  <Link
+                    to="/favorites"
+                    className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    المفضلة
+                  </Link>
                   {isAdmin && (
                     <Link
                       to="/admin"
