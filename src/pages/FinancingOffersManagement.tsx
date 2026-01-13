@@ -25,7 +25,8 @@ import {
   Mail,
   Globe,
   Loader2,
-  Eye
+  Eye,
+  Plus
 } from 'lucide-react';
 import {
   Select,
@@ -318,14 +319,20 @@ const FinancingOffersManagement = () => {
       
       <div className="container py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-            <ArrowRight className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">إدارة العروض التمويلية</h1>
-            <p className="text-muted-foreground">مراجعة وإدارة عروض البنوك وشركات التمويل</p>
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">إدارة العروض التمويلية</h1>
+              <p className="text-muted-foreground">مراجعة وإدارة عروض البنوك وشركات التمويل</p>
+            </div>
           </div>
+          <Button onClick={() => navigate('/financing')} className="gap-2">
+            <Plus className="h-4 w-4" />
+            إضافة عرض جديد
+          </Button>
         </div>
 
         {/* Stats */}
