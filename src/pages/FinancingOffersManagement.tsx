@@ -24,7 +24,8 @@ import {
   Phone,
   Mail,
   Globe,
-  Loader2
+  Loader2,
+  Eye
 } from 'lucide-react';
 import {
   Select,
@@ -72,11 +73,15 @@ const FinancingOffersManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [rateFilter, setRateFilter] = useState<string>('all');
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     approved: 0,
     featured: 0,
+    banks: 0,
+    companies: 0,
   });
   const { toast } = useToast();
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -145,6 +150,8 @@ const FinancingOffersManagement = () => {
           pending: data.filter(o => !o.is_approved).length,
           approved: data.filter(o => o.is_approved).length,
           featured: data.filter(o => o.is_featured).length,
+          banks: data.filter(o => o.company_type === 'bank').length,
+          companies: data.filter(o => o.company_type === 'financing_company').length,
         });
       }
     } catch (error) {
@@ -278,6 +285,18 @@ const FinancingOffersManagement = () => {
     if (statusFilter === 'featured' && !offer.is_featured) {
       return false;
     }
+    if (typeFilter !== 'all' && offer.company_type !== typeFilter) {
+      return false;
+    }
+    if (rateFilter === 'low' && offer.interest_rate > 4.5) {
+      return false;
+    }
+    if (rateFilter === 'medium' && (offer.interest_rate <= 4.5 || offer.interest_rate > 5.5)) {
+      return false;
+    }
+    if (rateFilter === 'high' && offer.interest_rate <= 5.5) {
+      return false;
+    }
     return true;
   });
 
@@ -371,14 +390,35 @@ const FinancingOffersManagement = () => {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger className="w-full md:w-40">
                   <SelectValue placeholder="الحالة" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع العروض</SelectItem>
+                  <SelectItem value="all">جميع الحالات</SelectItem>
                   <SelectItem value="pending">بانتظار المراجعة</SelectItem>
                   <SelectItem value="approved">موافق عليها</SelectItem>
                   <SelectItem value="featured">مميزة</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="نوع الجهة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الأنواع</SelectItem>
+                  <SelectItem value="bank">بنوك ({stats.banks})</SelectItem>
+                  <SelectItem value="financing_company">شركات تمويل ({stats.companies})</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={rateFilter} onValueChange={setRateFilter}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="معدل الفائدة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع المعدلات</SelectItem>
+                  <SelectItem value="low">منخفض (≤4.5%)</SelectItem>
+                  <SelectItem value="medium">متوسط (4.5-5.5%)</SelectItem>
+                  <SelectItem value="high">مرتفع ({'>'} 5.5%)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -401,9 +441,13 @@ const FinancingOffersManagement = () => {
                   <div className="flex flex-col lg:flex-row gap-4">
                     {/* Company Info */}
                     <div className="flex items-start gap-3 flex-1">
-                      <div className={`p-3 rounded-lg ${offer.company_type === 'bank' ? 'bg-blue-100' : 'bg-emerald-100'}`}>
-                        {getCompanyIcon(offer.company_type)}
-                      </div>
+                      {offer.logo_url ? (
+                        <img src={offer.logo_url} alt={offer.company_name} className="w-12 h-12 object-contain rounded-lg border p-1" />
+                      ) : (
+                        <div className={`p-3 rounded-lg ${offer.company_type === 'bank' ? 'bg-blue-100' : 'bg-emerald-100'}`}>
+                          {getCompanyIcon(offer.company_type)}
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-bold">{offer.company_name}</h3>
@@ -477,6 +521,10 @@ const FinancingOffersManagement = () => {
 
                     {/* Actions */}
                     <div className="flex flex-wrap lg:flex-col gap-2 justify-end">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/admin/financing-offers/${offer.id}`)}>
+                        <Eye className="h-4 w-4 ml-1" />
+                        عرض التفاصيل
+                      </Button>
                       {!offer.is_approved && (
                         <Button size="sm" onClick={() => handleApprove(offer.id)}>
                           <CheckCircle className="h-4 w-4 ml-1" />
