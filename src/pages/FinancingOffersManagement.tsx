@@ -26,7 +26,8 @@ import {
   Globe,
   Loader2,
   Eye,
-  Plus
+  Plus,
+  Pencil
 } from 'lucide-react';
 import {
   Select,
@@ -531,6 +532,10 @@ const FinancingOffersManagement = () => {
                       <Button size="sm" variant="outline" onClick={() => navigate(`/admin/financing-offers/${offer.id}`)}>
                         <Eye className="h-4 w-4 ml-1" />
                         عرض التفاصيل
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/admin/financing-offers/${offer.id}/edit`)}>
+                        <Pencil className="h-4 w-4 ml-1" />
+                        تعديل
                       </Button>
                       {!offer.is_approved && (
                         <Button size="sm" onClick={() => handleApprove(offer.id)}>
