@@ -14,6 +14,7 @@ import Admin from "./pages/Admin";
 import FeaturedAdsManagement from "./pages/FeaturedAdsManagement";
 import FinancingOffersManagement from "./pages/FinancingOffersManagement";
 import FinancingOfferDetails from "./pages/FinancingOfferDetails";
+import EditFinancingOffer from "./pages/EditFinancingOffer";
 import PropertyDetails from "./pages/PropertyDetails";
 import NeighborhoodGuide from "./pages/NeighborhoodGuide";
 import Financing from "./pages/Financing";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/admin/featured" element={<FeaturedAdsManagement />} />
             <Route path="/admin/financing-offers" element={<FinancingOffersManagement />} />
             <Route path="/admin/financing-offers/:id" element={<FinancingOfferDetails />} />
+            <Route path="/admin/financing-offers/:id/edit" element={<EditFinancingOffer />} />
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/neighborhood-guide" element={<NeighborhoodGuide />} />
             <Route path="/financing" element={<Financing />} />
