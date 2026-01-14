@@ -514,6 +514,7 @@ const Admin = () => {
             </Button>
             
             <div className="border-t my-4 pt-4">
+              <p className="text-xs text-muted-foreground mb-2 px-3">إدارة متقدمة</p>
               <Link to="/admin/featured">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Star className="h-4 w-4 text-yellow-500" />
@@ -521,9 +522,9 @@ const Admin = () => {
                 </Button>
               </Link>
               <Link to="/admin/financing-offers">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <Building2 className="h-4 w-4 text-emerald-500" />
-                  العروض التمويلية
+                <Button variant="secondary" className="w-full justify-start gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200">
+                  <Building2 className="h-4 w-4 text-emerald-600" />
+                  إدارة العروض التمويلية
                 </Button>
               </Link>
             </div>
@@ -533,7 +534,7 @@ const Admin = () => {
         {/* Main Content */}
         <main className="flex-1 p-6">
           {/* Mobile Tab Buttons */}
-          <div className="flex md:hidden gap-2 mb-6 overflow-x-auto">
+          <div className="flex md:hidden gap-2 mb-6 overflow-x-auto pb-2">
             <Button 
               variant={activeTab === 'overview' ? 'default' : 'outline'} 
               size="sm"
@@ -558,6 +559,12 @@ const Admin = () => {
               <Users className="h-4 w-4 ml-1" />
               المستخدمين
             </Button>
+            <Link to="/admin/financing-offers">
+              <Button variant="outline" size="sm" className="border-emerald-500 text-emerald-600">
+                <Building2 className="h-4 w-4 ml-1" />
+                العروض التمويلية
+              </Button>
+            </Link>
           </div>
 
           {/* Overview Tab */}
