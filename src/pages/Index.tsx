@@ -7,6 +7,7 @@ import StatsSection from "@/components/StatsSection";
 import ServicesSection from "@/components/ServicesSection";
 import HomeMapSection from "@/components/HomeMapSection";
 import Footer from "@/components/Footer";
+import FinancingOffersCarousel from "@/components/FinancingOffersCarousel";
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
       <main>
         <HeroSection />
         <FeaturedAds />
+        <FinancingOffersCarousel />
         <FeaturedProperties />
         <HomeMapSection />
         <CityGrid />
