@@ -207,25 +207,25 @@ const Financing = () => {
   const printRef = useRef<HTMLDivElement>(null);
 
   // Fetch financing offers from database
+  const fetchOffers = async () => {
+    const { data, error } = await supabase
+      .from('financing_offers')
+      .select('*')
+      .eq('is_approved', true)
+      .order('is_featured', { ascending: false })
+      .order('interest_rate', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      const dbOffers = data.map(offer => ({
+        ...offer,
+        features: offer.features || [],
+      })) as FinancingOffer[];
+      setOffers([...dbOffers, ...defaultBanks]);
+    }
+    setLoadingOffers(false);
+  };
+
   useEffect(() => {
-    const fetchOffers = async () => {
-      const { data, error } = await supabase
-        .from('financing_offers')
-        .select('*')
-        .eq('is_approved', true)
-        .order('is_featured', { ascending: false })
-        .order('interest_rate', { ascending: true });
-
-      if (!error && data && data.length > 0) {
-        const dbOffers = data.map(offer => ({
-          ...offer,
-          features: offer.features || [],
-        })) as FinancingOffer[];
-        setOffers([...dbOffers, ...defaultBanks]);
-      }
-      setLoadingOffers(false);
-    };
-
     fetchOffers();
   }, []);
 
@@ -337,7 +337,7 @@ const Financing = () => {
     }
 
     setSubmitting(true);
-    const { error } = await supabase.from('financing_offers').insert({
+    const { data: insertedOffer, error } = await supabase.from('financing_offers').insert({
       user_id: user.id,
       company_name: newOffer.company_name,
       company_type: newOffer.company_type,
@@ -351,7 +351,7 @@ const Financing = () => {
       email: newOffer.email || null,
       website: newOffer.website || null,
       description: newOffer.description || null,
-    });
+    }).select().single();
 
     setSubmitting(false);
 
@@ -362,9 +362,25 @@ const Financing = () => {
         variant: "destructive",
       });
     } else {
+      // Send notifications to all users
+      try {
+        await supabase.functions.invoke('notify-new-financing-offer', {
+          body: {
+            offer_id: insertedOffer?.id,
+            company_name: newOffer.company_name,
+            company_type: newOffer.company_type,
+            interest_rate: newOffer.interest_rate,
+            max_amount: newOffer.max_amount,
+            user_id: user.id,
+          },
+        });
+      } catch (notifyError) {
+        console.error('Error sending notifications:', notifyError);
+      }
+
       toast({
-        title: "تم الإرسال",
-        description: "تم إرسال العرض للمراجعة وسيظهر بعد الموافقة عليه",
+        title: "تم النشر",
+        description: "تم نشر العرض التمويلي بنجاح وإرسال إشعارات للمستخدمين",
       });
       setAddOfferOpen(false);
       setNewOffer({
@@ -381,6 +397,7 @@ const Financing = () => {
         website: "",
         description: "",
       });
+      fetchOffers();
     }
   };
 
