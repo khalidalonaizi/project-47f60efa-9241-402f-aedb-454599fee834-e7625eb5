@@ -8,6 +8,7 @@ import ServicesSection from "@/components/ServicesSection";
 import HomeMapSection from "@/components/HomeMapSection";
 import Footer from "@/components/Footer";
 import FinancingOffersCarousel from "@/components/FinancingOffersCarousel";
+import AdvertisementBanner from "@/components/AdvertisementBanner";
 
 const Index = () => {
   return (
@@ -15,9 +16,21 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        
+        {/* Top Banner Ad */}
+        <section className="container mx-auto px-4 py-6">
+          <AdvertisementBanner location="homepage" variant="banner" />
+        </section>
+        
         <FeaturedAds />
         <FinancingOffersCarousel />
         <FeaturedProperties />
+        
+        {/* Inline Ad */}
+        <section className="container mx-auto px-4 py-6">
+          <AdvertisementBanner location="homepage" variant="inline" />
+        </section>
+        
         <HomeMapSection />
         <CityGrid />
         <StatsSection />

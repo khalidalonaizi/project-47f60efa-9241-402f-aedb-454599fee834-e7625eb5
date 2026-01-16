@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PropertyReviews from '@/components/PropertyReviews';
+import AdvertisementBanner from '@/components/AdvertisementBanner';
 import SendMessageDialog from '@/components/SendMessageDialog';
 import PropertyLocationMap from '@/components/PropertyLocationMap';
 import { 
@@ -407,6 +408,9 @@ const PropertyDetails = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Sidebar Ad */}
+            <AdvertisementBanner location="property-details" variant="sidebar" />
+            
             {/* Owner Card */}
             <Card className="sticky top-24">
               <CardContent className="p-6">

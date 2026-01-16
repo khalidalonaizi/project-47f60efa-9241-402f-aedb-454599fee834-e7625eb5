@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      advertisements: {
+        Row: {
+          click_count: number
+          created_at: string
+          display_locations: string[]
+          end_date: string
+          id: string
+          image_url: string
+          is_active: boolean
+          start_date: string
+          target_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          click_count?: number
+          created_at?: string
+          display_locations?: string[]
+          end_date: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          start_date: string
+          target_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          click_count?: number
+          created_at?: string
+          display_locations?: string[]
+          end_date?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          start_date?: string
+          target_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
