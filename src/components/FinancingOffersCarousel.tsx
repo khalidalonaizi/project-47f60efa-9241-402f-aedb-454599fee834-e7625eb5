@@ -24,8 +24,9 @@ const FinancingOffersCarousel = () => {
 
   useEffect(() => {
     const fetchOffers = async () => {
+      // Use public view that doesn't expose sensitive contact info
       const { data, error } = await supabase
-        .from("financing_offers")
+        .from("financing_offers_public" as any)
         .select("id, company_name, company_type, logo_url, interest_rate, max_amount, max_tenure, is_featured")
         .eq("is_approved", true)
         .order("is_featured", { ascending: false })
@@ -33,7 +34,7 @@ const FinancingOffersCarousel = () => {
         .limit(10);
 
       if (!error && data) {
-        setOffers(data);
+        setOffers(data as unknown as FinancingOffer[]);
       }
       setLoading(false);
     };
