@@ -27,7 +27,8 @@ import {
   Star,
   Filter,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   Select,
@@ -41,6 +42,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import * as XLSX from 'xlsx';
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import AdminAdvertisements from '@/components/AdminAdvertisements';
 
 interface Property {
   id: string;
@@ -84,7 +86,7 @@ const Admin = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'users' | 'advertisements'>('overview');
   const { toast } = useToast();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -515,6 +517,14 @@ const Admin = () => {
             
             <div className="border-t my-4 pt-4">
               <p className="text-xs text-muted-foreground mb-2 px-3">إدارة متقدمة</p>
+              <Button 
+                variant={activeTab === 'advertisements' ? 'secondary' : 'ghost'} 
+                className="w-full justify-start gap-2"
+                onClick={() => setActiveTab('advertisements')}
+              >
+                <ImageIcon className="h-4 w-4 text-purple-500" />
+                إدارة الإعلانات
+              </Button>
               <Link to="/admin/featured">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Star className="h-4 w-4 text-yellow-500" />
@@ -522,7 +532,7 @@ const Admin = () => {
                 </Button>
               </Link>
               <Link to="/admin/financing-offers">
-                <Button variant="secondary" className="w-full justify-start gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200">
+                <Button variant="ghost" className="w-full justify-start gap-2">
                   <Building2 className="h-4 w-4 text-emerald-600" />
                   إدارة العروض التمويلية
                 </Button>
@@ -558,6 +568,14 @@ const Admin = () => {
             >
               <Users className="h-4 w-4 ml-1" />
               المستخدمين
+            </Button>
+            <Button 
+              variant={activeTab === 'advertisements' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setActiveTab('advertisements')}
+            >
+              <ImageIcon className="h-4 w-4 ml-1" />
+              إدارة الإعلانات
             </Button>
             <Link to="/admin/financing-offers">
               <Button variant="outline" size="sm" className="border-emerald-500 text-emerald-600">
@@ -1082,6 +1100,11 @@ const Admin = () => {
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Advertisements Tab */}
+          {activeTab === 'advertisements' && (
+            <AdminAdvertisements />
           )}
         </main>
       </div>

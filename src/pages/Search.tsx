@@ -16,6 +16,7 @@ import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import MapSearch from "@/components/MapSearch";
 import PropertyComparison from "@/components/PropertyComparison";
+import AdvertisementBanner from "@/components/AdvertisementBanner";
 import { usePropertyComparison } from "@/hooks/usePropertyComparison";
 import { supabase } from "@/integrations/supabase/client";
 import { Filter, Grid3X3, List, MapPin, RotateCcw, Search, SlidersHorizontal, Loader2, Map } from "lucide-react";
@@ -346,6 +347,11 @@ const SearchPage = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+              
+              {/* Sidebar Ad */}
+              <div className="mt-6">
+                <AdvertisementBanner location="search" variant="sidebar" />
               </div>
             </div>
           </aside>
