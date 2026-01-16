@@ -501,7 +501,66 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      financing_offers_public: {
+        Row: {
+          company_name: string | null
+          company_type: string | null
+          created_at: string | null
+          description: string | null
+          features: string[] | null
+          id: string | null
+          interest_rate: number | null
+          is_approved: boolean | null
+          is_featured: boolean | null
+          logo_url: string | null
+          max_amount: number | null
+          max_dti: number | null
+          max_tenure: number | null
+          min_salary: number | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          company_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string | null
+          interest_rate?: number | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          max_amount?: number | null
+          max_dti?: number | null
+          max_tenure?: number | null
+          min_salary?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          company_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string | null
+          interest_rate?: number | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          max_amount?: number | null
+          max_dti?: number | null
+          max_tenure?: number | null
+          min_salary?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
