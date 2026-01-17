@@ -26,7 +26,9 @@ import {
   Calendar,
   Home,
   Check,
-  Star
+  Star,
+  Lock,
+  LogIn
 } from 'lucide-react';
 import SocialShareButtons from '@/components/SocialShareButtons';
 
@@ -47,7 +49,6 @@ interface Property {
   images: string[] | null;
   is_approved: boolean | null;
   created_at: string;
-  user_id: string;
   latitude: number | null;
   longitude: number | null;
 }
@@ -71,7 +72,7 @@ const PropertyDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const [property, setProperty] = useState<Property | null>(null);
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
@@ -92,8 +93,9 @@ const PropertyDetails = () => {
   }, [user, property]);
 
   const fetchProperty = async () => {
+    // First try to fetch from public view
     const { data, error } = await supabase
-      .from('properties')
+      .from('properties_public')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -108,17 +110,18 @@ const PropertyDetails = () => {
       return;
     }
 
-    setProperty(data);
+    setProperty(data as Property);
+    setLoading(false);
+  };
 
-    // جلب معلومات المالك
+  const fetchOwnerInfo = async (userId: string) => {
     const { data: ownerData } = await supabase
       .from('profiles')
       .select('full_name, phone, avatar_url')
-      .eq('user_id', data.user_id)
+      .eq('user_id', userId)
       .maybeSingle();
 
     setOwner(ownerData);
-    setLoading(false);
   };
 
   const checkFavorite = async () => {
@@ -187,7 +190,7 @@ const PropertyDetails = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg">جاري التحميل...</p>
@@ -197,6 +200,135 @@ const PropertyDetails = () => {
 
   if (!property) return null;
 
+  // Show login prompt if user is not authenticated
+  if (!user) {
+    const images = property.images && property.images.length > 0 
+      ? property.images 
+      : ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'];
+
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <main className="container py-8">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link to="/" className="hover:text-primary">الرئيسية</Link>
+            <ChevronLeft className="h-4 w-4" />
+            <Link to="/search" className="hover:text-primary">العقارات</Link>
+            <ChevronLeft className="h-4 w-4" />
+            <span className="text-foreground">{property.title}</span>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Preview Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Image Gallery Preview */}
+              <div className="relative rounded-2xl overflow-hidden aspect-video bg-muted">
+                <img
+                  src={images[0]}
+                  alt={property.title}
+                  className="w-full h-full object-cover blur-sm"
+                />
+                
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                  <Lock className="h-16 w-16 text-primary mb-4" />
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    سجل الدخول لعرض التفاصيل
+                  </h2>
+                  <p className="text-muted-foreground mb-6 text-center px-4">
+                    يجب تسجيل الدخول أو إنشاء حساب لعرض تفاصيل العقار الكاملة
+                  </p>
+                  <div className="flex gap-3">
+                    <Button variant="hero" onClick={() => navigate('/auth')}>
+                      <LogIn className="h-4 w-4 ml-2" />
+                      تسجيل الدخول
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate('/auth')}>
+                      إنشاء حساب
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <Badge className="bg-primary text-primary-foreground">
+                    {property.listing_type === 'sale' ? 'للبيع' : 'للإيجار'}
+                  </Badge>
+                  <Badge variant="secondary">
+                    {propertyTypeLabels[property.property_type] || property.property_type}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Basic Info Preview */}
+              <Card>
+                <CardContent className="p-6">
+                  <h1 className="text-2xl font-bold mb-2">{property.title}</h1>
+                  <div className="flex items-center gap-1 text-muted-foreground mb-4">
+                    <MapPin className="h-4 w-4" />
+                    <span>{property.city}</span>
+                    {property.neighborhood && <span> - {property.neighborhood}</span>}
+                  </div>
+                  <div className="text-3xl font-bold text-primary">
+                    {property.price.toLocaleString()} ريال
+                    {property.listing_type === 'rent' && <span className="text-lg font-normal text-muted-foreground">/شهر</span>}
+                  </div>
+
+                  {/* Specs Preview */}
+                  <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg mt-6">
+                    <div className="text-center">
+                      <BedDouble className="h-6 w-6 mx-auto mb-1 text-primary" />
+                      <p className="font-bold">{property.bedrooms || 0}</p>
+                      <p className="text-sm text-muted-foreground">غرف نوم</p>
+                    </div>
+                    <div className="text-center">
+                      <Bath className="h-6 w-6 mx-auto mb-1 text-primary" />
+                      <p className="font-bold">{property.bathrooms || 0}</p>
+                      <p className="text-sm text-muted-foreground">حمامات</p>
+                    </div>
+                    <div className="text-center">
+                      <Ruler className="h-6 w-6 mx-auto mb-1 text-primary" />
+                      <p className="font-bold">{property.area || 0}</p>
+                      <p className="text-sm text-muted-foreground">م²</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-primary/5 rounded-lg text-center">
+                    <Lock className="h-8 w-8 mx-auto mb-2 text-primary" />
+                    <p className="text-muted-foreground">
+                      سجل الدخول لعرض الوصف الكامل وتفاصيل المالك والموقع على الخريطة
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <AdvertisementBanner location="property-details" variant="sidebar" />
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Lock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="font-bold text-lg mb-2">معلومات المالك</h3>
+                  <p className="text-muted-foreground mb-4">
+                    سجل الدخول للتواصل مع المالك
+                  </p>
+                  <Button variant="hero" className="w-full" onClick={() => navigate('/auth')}>
+                    <LogIn className="h-4 w-4 ml-2" />
+                    تسجيل الدخول
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Full content for authenticated users
   const images = property.images && property.images.length > 0 
     ? property.images 
     : ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'];
@@ -448,23 +580,18 @@ const PropertyDetails = () => {
                       واتساب
                     </a>
                   </Button>
-
-                  {/* زر مراسلة المالك */}
-                  <SendMessageDialog
-                    receiverId={property.user_id}
+                  
+                  <SendMessageDialog 
+                    receiverId={owner ? undefined : undefined}
                     propertyId={property.id}
                     propertyTitle={property.title}
                   />
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-border">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>تاريخ النشر: {new Date(property.created_at).toLocaleDateString('ar-SA')}</span>
-                  </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Home className="h-4 w-4" />
-                    <span>رقم الإعلان: {property.id.slice(0, 8)}</span>
+                    <Calendar className="h-4 w-4" />
+                    <span>تم النشر: {new Date(property.created_at).toLocaleDateString('ar-SA')}</span>
                   </div>
                 </div>
               </CardContent>

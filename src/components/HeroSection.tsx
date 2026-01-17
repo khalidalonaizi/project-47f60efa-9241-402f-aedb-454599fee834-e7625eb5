@@ -1,10 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Building, Home, MapPin, Search, Store } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"buy" | "rent">("buy");
   const [propertyType, setPropertyType] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const propertyTypes = [
     { id: "all", label: "الكل", icon: Building },
@@ -12,6 +15,19 @@ const HeroSection = () => {
     { id: "villa", label: "فيلا", icon: Home },
     { id: "commercial", label: "تجاري", icon: Store },
   ];
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    params.set('openFilters', 'true');
+    if (searchQuery) params.set('q', searchQuery);
+    if (activeTab) params.set('type', activeTab);
+    if (propertyType !== 'all') params.set('propertyType', propertyType);
+    navigate(`/search?${params.toString()}`);
+  };
+
+  const handleCityClick = (city: string) => {
+    navigate(`/search?openFilters=true&city=${encodeURIComponent(city)}`);
+  };
 
   return (
     <section className="hero-gradient py-12 lg:py-20">
@@ -76,10 +92,13 @@ const HeroSection = () => {
                 <input
                   type="text"
                   placeholder="ابحث بالمدينة، الحي، أو اسم المشروع..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   className="w-full h-14 pr-12 pl-4 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-              <Button variant="hero" size="xl" className="md:w-auto">
+              <Button variant="hero" size="xl" className="md:w-auto" onClick={handleSearch}>
                 <Search className="w-5 h-5" />
                 بحث
               </Button>
@@ -89,13 +108,13 @@ const HeroSection = () => {
             <div className="flex flex-wrap justify-center gap-3 mt-6">
               <span className="text-sm text-muted-foreground">بحث سريع:</span>
               {["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة"].map((city) => (
-                <a
+                <button
                   key={city}
-                  href="#"
+                  onClick={() => handleCityClick(city)}
                   className="text-sm text-primary hover:text-primary/80 hover:underline transition-colors"
                 >
                   {city}
-                </a>
+                </button>
               ))}
             </div>
           </div>
