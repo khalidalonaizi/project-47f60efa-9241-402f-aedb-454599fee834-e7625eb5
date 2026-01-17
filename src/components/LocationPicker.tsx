@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
-import { MapPin, LocateFixed } from 'lucide-react';
+import { MapPin, LocateFixed, Loader2 } from 'lucide-react';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
@@ -16,17 +16,19 @@ interface LocationPickerProps {
   latitude?: number;
   longitude?: number;
   onLocationChange: (lat: number, lng: number) => void;
+  autoDetectLocation?: boolean;
 }
 
-const LocationPicker = ({ latitude, longitude, onLocationChange }: LocationPickerProps) => {
+const LocationPicker = ({ latitude, longitude, onLocationChange, autoDetectLocation = true }: LocationPickerProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   // Default to center of Saudi Arabia
-  const defaultLat = latitude || 24.7136;
-  const defaultLng = longitude || 46.6753;
+  const defaultLat = 24.7136;
+  const defaultLng = 46.6753;
 
   const updateMarker = useCallback((lat: number, lng: number) => {
     if (!mapRef.current) return;
@@ -47,10 +49,39 @@ const LocationPicker = ({ latitude, longitude, onLocationChange }: LocationPicke
     onLocationChange(lat, lng);
   }, [onLocationChange]);
 
+  const getCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      alert('الموقع الجغرافي غير مدعوم في متصفحك');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        updateMarker(position.coords.latitude, position.coords.longitude);
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        setIsLocating(false);
+        // If auto-detecting failed, center on default location
+        if (mapRef.current && !latitude && !longitude) {
+          mapRef.current.setView([defaultLat, defaultLng], 10);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }, [updateMarker, latitude, longitude]);
+
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    mapRef.current = L.map(containerRef.current).setView([defaultLat, defaultLng], 10);
+    // Initialize map with a temporary view
+    const initialLat = latitude || defaultLat;
+    const initialLng = longitude || defaultLng;
+    const initialZoom = latitude && longitude ? 15 : 6;
+
+    mapRef.current = L.map(containerRef.current).setView([initialLat, initialLng], initialZoom);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
@@ -66,6 +97,8 @@ const LocationPicker = ({ latitude, longitude, onLocationChange }: LocationPicke
       updateMarker(latitude, longitude);
     }
 
+    setMapReady(true);
+
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
@@ -74,30 +107,16 @@ const LocationPicker = ({ latitude, longitude, onLocationChange }: LocationPicke
     };
   }, []);
 
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('الموقع الجغرافي غير مدعوم في متصفحك');
-      return;
+  // Auto-detect location on mount if no coordinates provided
+  useEffect(() => {
+    if (mapReady && autoDetectLocation && !latitude && !longitude) {
+      getCurrentLocation();
     }
-
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        updateMarker(position.coords.latitude, position.coords.longitude);
-        setIsLocating(false);
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        setIsLocating(false);
-        alert('لم نتمكن من الحصول على موقعك. يرجى التأكد من تفعيل خدمة الموقع.');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  };
+  }, [mapReady, autoDetectLocation, latitude, longitude, getCurrentLocation]);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
           <span>انقر على الخريطة لتحديد الموقع أو اسحب العلامة</span>
@@ -110,20 +129,32 @@ const LocationPicker = ({ latitude, longitude, onLocationChange }: LocationPicke
           disabled={isLocating}
           className="gap-2"
         >
-          <LocateFixed className={`h-4 w-4 ${isLocating ? 'animate-spin' : ''}`} />
-          {isLocating ? 'جاري التحديد...' : 'موقعي الحالي'}
+          {isLocating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              جاري التحديد...
+            </>
+          ) : (
+            <>
+              <LocateFixed className="h-4 w-4" />
+              موقعي الحالي
+            </>
+          )}
         </Button>
       </div>
       
       <div 
         ref={containerRef} 
-        className="h-[300px] rounded-lg border border-border overflow-hidden"
+        className="h-[400px] rounded-lg border border-border overflow-hidden"
         style={{ zIndex: 0 }}
       />
       
       {latitude && longitude && (
-        <div className="text-sm text-muted-foreground text-center">
-          الإحداثيات: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+        <div className="flex items-center justify-center gap-2 p-3 bg-muted/50 rounded-lg">
+          <MapPin className="h-4 w-4 text-primary" />
+          <span className="text-sm text-muted-foreground">
+            الإحداثيات: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+          </span>
         </div>
       )}
     </div>

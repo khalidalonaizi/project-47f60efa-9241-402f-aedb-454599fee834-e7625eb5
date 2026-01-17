@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge";
-import { Bath, Bed, Heart, MapPin, Maximize, GitCompare } from "lucide-react";
+import { Bath, Bed, Heart, MapPin, Maximize, GitCompare, Navigation } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { formatDistance } from "@/hooks/useGeolocation";
 
 interface PropertyCardProps {
   id: string;
@@ -18,6 +19,7 @@ interface PropertyCardProps {
   isFeatured?: boolean;
   isCompareSelected?: boolean;
   onCompareToggle?: (id: string) => void;
+  distance?: number;
 }
 
 const PropertyCard = ({
@@ -35,6 +37,7 @@ const PropertyCard = ({
   isFeatured,
   isCompareSelected,
   onCompareToggle,
+  distance,
 }: PropertyCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -65,12 +68,18 @@ const PropertyCard = ({
         />
         
         {/* Badges */}
-        <div className="absolute top-3 right-3 flex gap-2">
+        <div className="absolute top-3 right-3 flex gap-2 flex-wrap">
           {isNew && (
             <Badge className="bg-success text-success-foreground">جديد</Badge>
           )}
           {isFeatured && (
             <Badge className="bg-gold text-foreground">مميز</Badge>
+          )}
+          {distance !== undefined && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Navigation className="w-3 h-3" />
+              {formatDistance(distance)}
+            </Badge>
           )}
         </div>
 
