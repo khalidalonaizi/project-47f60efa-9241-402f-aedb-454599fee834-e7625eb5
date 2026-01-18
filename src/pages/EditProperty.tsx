@@ -282,7 +282,7 @@ const EditProperty = () => {
                     {errors.title && <p className="text-destructive text-sm mt-1">{errors.title}</p>}
                   </div>
                   
-                  <Select value={propertyType} onValueChange={setPropertyType}>
+                  <Select value={propertyType || undefined} onValueChange={setPropertyType}>
                     <SelectTrigger>
                       <SelectValue placeholder="نوع العقار" />
                     </SelectTrigger>
@@ -326,7 +326,7 @@ const EditProperty = () => {
                 </h3>
                 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Select value={city} onValueChange={setCity}>
+                  <Select value={city || undefined} onValueChange={setCity}>
                     <SelectTrigger>
                       <SelectValue placeholder="اختر المدينة" />
                     </SelectTrigger>
