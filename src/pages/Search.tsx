@@ -65,8 +65,8 @@ const SearchPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [listingType, setListingType] = useState<"sale" | "rent">("sale");
-  const [maxPrice, setMaxPrice] = useState(10000000000);
-  const [maxArea, setMaxArea] = useState(10000000000);
+  const [maxPrice, setMaxPrice] = useState(10000000);
+  const [maxArea, setMaxArea] = useState(10000000);
   const [bedrooms, setBedrooms] = useState<string>("");
   const [bathrooms, setBathrooms] = useState<string>("");
   const [city, setCity] = useState<string>("");
@@ -170,8 +170,8 @@ const SearchPage = () => {
   };
 
   const resetFilters = () => {
-    setMaxPrice(10000000000);
-    setMaxArea(10000000000);
+    setMaxPrice(10000000);
+    setMaxArea(10000000);
     setBedrooms("");
     setBathrooms("");
     setCity("");
@@ -364,13 +364,13 @@ const SearchPage = () => {
                       <Slider
                         value={[maxPrice]}
                         onValueChange={(v) => setMaxPrice(v[0])}
-                        min={100}
-                        max={10000000000}
-                        step={listingType === "sale" ? 100000 : 1000}
+                        min={50}
+                        max={10000000}
+                        step={1}
                         className="mb-2"
                       />
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>100 ر.س</span>
+                        <span>50 ر.س</span>
                         <span>حتى {formatPrice(maxPrice)} ر.س</span>
                       </div>
                     </div>
@@ -382,8 +382,8 @@ const SearchPage = () => {
                         value={[maxArea]}
                         onValueChange={(v) => setMaxArea(v[0])}
                         min={1}
-                        max={10000000000}
-                        step={50}
+                        max={10000000}
+                        step={1}
                         className="mb-2"
                       />
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
