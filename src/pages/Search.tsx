@@ -65,8 +65,8 @@ const SearchPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [listingType, setListingType] = useState<"sale" | "rent">("sale");
-  const [maxPrice, setMaxPrice] = useState(10000000);
-  const [maxArea, setMaxArea] = useState(10000000);
+  const [maxPrice, setMaxPrice] = useState(1000000);
+  const [maxArea, setMaxArea] = useState(10000);
   const [bedrooms, setBedrooms] = useState<string>("");
   const [bathrooms, setBathrooms] = useState<string>("");
   const [city, setCity] = useState<string>("");
@@ -170,8 +170,8 @@ const SearchPage = () => {
   };
 
   const resetFilters = () => {
-    setMaxPrice(10000000);
-    setMaxArea(10000000);
+    setMaxPrice(1000000);
+    setMaxArea(10000);
     setBedrooms("");
     setBathrooms("");
     setCity("");
@@ -365,7 +365,7 @@ const SearchPage = () => {
                         value={[maxPrice]}
                         onValueChange={(v) => setMaxPrice(v[0])}
                         min={50}
-                        max={10000000}
+                        max={1000000}
                         step={1}
                         className="mb-2"
                       />
@@ -382,7 +382,7 @@ const SearchPage = () => {
                         value={[maxArea]}
                         onValueChange={(v) => setMaxArea(v[0])}
                         min={1}
-                        max={10000000}
+                        max={10000}
                         step={1}
                         className="mb-2"
                       />
