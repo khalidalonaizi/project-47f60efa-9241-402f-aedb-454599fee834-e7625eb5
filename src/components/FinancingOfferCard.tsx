@@ -6,15 +6,13 @@ import {
   Calendar, 
   Banknote, 
   Building2, 
-  CheckCircle, 
-  Phone,
+  CheckCircle,
   Globe,
-  Mail,
   Landmark,
   BadgeDollarSign
 } from "lucide-react";
-import ContactButton from "./ContactButton";
 
+// Public financing offer - without sensitive contact info (phone/email)
 interface FinancingOffer {
   id: string;
   company_name: string;
@@ -26,8 +24,6 @@ interface FinancingOffer {
   min_salary: number;
   max_dti: number;
   features: string[];
-  phone?: string;
-  email?: string;
   website?: string;
   description?: string;
   is_featured?: boolean;
@@ -127,19 +123,18 @@ const FinancingOfferCard = ({ offer, isCompatible = true, formatPrice }: Financi
         <div className="flex gap-2 pt-2">
           {offer.website && (
             <a href={offer.website} target="_blank" rel="noopener noreferrer" className="flex-1">
-              <Button className="w-full" variant="outline" disabled={!isCompatible}>
+              <Button className="w-full" variant={isCompatible ? "default" : "outline"} disabled={!isCompatible}>
                 <Globe className="w-4 h-4 ml-2" />
                 زيارة الموقع
               </Button>
             </a>
           )}
-          <ContactButton
-            companyName={offer.company_name}
-            companyPhone={offer.phone}
-            companyEmail={offer.email}
-            className="flex-1"
-            variant={isCompatible ? "default" : "outline"}
-          />
+          {!offer.website && (
+            <Button className="flex-1" variant="outline" disabled>
+              <Globe className="w-4 h-4 ml-2" />
+              لا يوجد موقع
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
