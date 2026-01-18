@@ -65,8 +65,8 @@ const SearchPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [listingType, setListingType] = useState<"sale" | "rent">("sale");
-  const [priceRange, setPriceRange] = useState([0, 5000000]);
-  const [areaRange, setAreaRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([100, 10000000000]);
+  const [areaRange, setAreaRange] = useState([1, 10000000000]);
   const [bedrooms, setBedrooms] = useState<string>("");
   const [bathrooms, setBathrooms] = useState<string>("");
   const [city, setCity] = useState<string>("");
@@ -170,8 +170,8 @@ const SearchPage = () => {
   };
 
   const resetFilters = () => {
-    setPriceRange([0, 5000000]);
-    setAreaRange([0, 1000]);
+    setPriceRange([100, 10000000000]);
+    setAreaRange([1, 10000000000]);
     setBedrooms("");
     setBathrooms("");
     setCity("");
@@ -364,8 +364,8 @@ const SearchPage = () => {
                       <Slider
                         value={priceRange}
                         onValueChange={setPriceRange}
-                        min={0}
-                        max={listingType === "sale" ? 10000000 : 50000}
+                        min={100}
+                        max={10000000000}
                         step={listingType === "sale" ? 100000 : 1000}
                         className="mb-2"
                       />
@@ -381,14 +381,14 @@ const SearchPage = () => {
                       <Slider
                         value={areaRange}
                         onValueChange={setAreaRange}
-                        min={0}
-                        max={2000}
+                        min={1}
+                        max={10000000000}
                         step={50}
                         className="mb-2"
                       />
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{areaRange[0]} م²</span>
-                        <span>{areaRange[1]} م²</span>
+                        <span>{formatPrice(areaRange[0])} م²</span>
+                        <span>{formatPrice(areaRange[1])} م²</span>
                       </div>
                     </div>
                   </div>
