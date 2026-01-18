@@ -146,7 +146,7 @@ const FeaturedAdsManagement = () => {
   };
 
   // Get unique cities for filter
-  const cities = [...new Set(properties.map(p => p.city))];
+  const cities = [...new Set(properties.map(p => p.city))].filter(Boolean);
 
   // Filter properties
   const filteredProperties = properties.filter(p => {

@@ -304,7 +304,7 @@ const Admin = () => {
   };
 
   // Get unique cities for filter
-  const cities = [...new Set(properties.map(p => p.city))];
+  const cities = [...new Set(properties.map(p => p.city))].filter(Boolean);
 
   // Prepare chart data
   const propertyTypeData = properties.reduce((acc, p) => {

@@ -204,7 +204,7 @@ const PriceAlerts = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">المدينة *</label>
                   <Select
-                    value={newAlert.city}
+                    value={newAlert.city || undefined}
                     onValueChange={(value) =>
                       setNewAlert((prev) => ({ ...prev, city: value }))
                     }
@@ -237,7 +237,7 @@ const PriceAlerts = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">نوع العقار (اختياري)</label>
                   <Select
-                    value={newAlert.property_type}
+                    value={newAlert.property_type || undefined}
                     onValueChange={(value) =>
                       setNewAlert((prev) => ({ ...prev, property_type: value }))
                     }
