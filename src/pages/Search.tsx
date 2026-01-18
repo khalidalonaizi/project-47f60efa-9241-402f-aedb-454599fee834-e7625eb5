@@ -134,12 +134,12 @@ const SearchPage = () => {
   ];
 
   const distanceOptions = [
-    { value: null, label: "الكل" },
-    { value: 5, label: "5 كم" },
-    { value: 10, label: "10 كم" },
-    { value: 25, label: "25 كم" },
-    { value: 50, label: "50 كم" },
-    { value: 100, label: "100 كم" },
+    { value: "all", label: "الكل" },
+    { value: "5", label: "5 كم" },
+    { value: "10", label: "10 كم" },
+    { value: "25", label: "25 كم" },
+    { value: "50", label: "50 كم" },
+    { value: "100", label: "100 كم" },
   ];
 
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -300,23 +300,23 @@ const SearchPage = () => {
                         className="pr-10"
                       />
                     </div>
-                    <Select value={city} onValueChange={setCity}>
+                    <Select value={city || "all"} onValueChange={(v) => setCity(v === "all" ? "" : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="المدينة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">الكل</SelectItem>
+                        <SelectItem value="all">الكل</SelectItem>
                         {cities.map((c) => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={propertyType} onValueChange={setPropertyType}>
+                    <Select value={propertyType || "all"} onValueChange={(v) => setPropertyType(v === "all" ? "" : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="نوع العقار" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">الكل</SelectItem>
+                        <SelectItem value="all">الكل</SelectItem>
                         {propertyTypes.map((type) => (
                           <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                         ))}
@@ -331,23 +331,23 @@ const SearchPage = () => {
                       value={neighborhood}
                       onChange={(e) => setNeighborhood(e.target.value)}
                     />
-                    <Select value={bedrooms} onValueChange={setBedrooms}>
+                    <Select value={bedrooms || "all"} onValueChange={(v) => setBedrooms(v === "all" ? "" : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="عدد الغرف" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">الكل</SelectItem>
+                        <SelectItem value="all">الكل</SelectItem>
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                           <SelectItem key={num} value={num.toString()}>{num} غرف</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={bathrooms} onValueChange={setBathrooms}>
+                    <Select value={bathrooms || "all"} onValueChange={(v) => setBathrooms(v === "all" ? "" : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="عدد الحمامات" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">الكل</SelectItem>
+                        <SelectItem value="all">الكل</SelectItem>
                         {[1, 2, 3, 4, 5, 6].map((num) => (
                           <SelectItem key={num} value={num.toString()}>{num} حمام</SelectItem>
                         ))}
@@ -422,15 +422,15 @@ const SearchPage = () => {
                     {userLat && userLng && (
                       <div className="grid grid-cols-2 gap-4">
                         <Select 
-                          value={maxDistance?.toString() || ""} 
-                          onValueChange={(v) => setMaxDistance(v ? parseInt(v) : null)}
+                          value={maxDistance?.toString() || "all"} 
+                          onValueChange={(v) => setMaxDistance(v === "all" ? null : parseInt(v))}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="المسافة القصوى" />
                           </SelectTrigger>
                           <SelectContent>
                             {distanceOptions.map((opt) => (
-                              <SelectItem key={opt.label} value={opt.value?.toString() || ""}>
+                              <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
                               </SelectItem>
                             ))}
