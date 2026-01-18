@@ -42,6 +42,7 @@ import {
   Loader2
 } from "lucide-react";
 
+// Public financing offer - without sensitive contact info
 interface FinancingOffer {
   id: string;
   company_name: string;
@@ -53,8 +54,6 @@ interface FinancingOffer {
   min_salary: number;
   max_dti: number;
   features: string[];
-  phone?: string;
-  email?: string;
   website?: string;
   description?: string;
   is_featured?: boolean;
@@ -72,7 +71,6 @@ const defaultBanks: FinancingOffer[] = [
     min_salary: 5000,
     max_dti: 65,
     features: ["تمويل يصل إلى 90%", "فترة سداد مرنة", "إعفاء من الرسوم الإدارية"],
-    phone: "920000000",
     website: "https://www.alahli.com",
   },
   {
@@ -85,7 +83,6 @@ const defaultBanks: FinancingOffer[] = [
     min_salary: 4000,
     max_dti: 60,
     features: ["متوافق مع الشريعة", "موافقة سريعة", "تأمين مجاني"],
-    phone: "920003344",
     website: "https://www.alrajhibank.com.sa",
   },
   {
@@ -98,7 +95,6 @@ const defaultBanks: FinancingOffer[] = [
     min_salary: 6000,
     max_dti: 55,
     features: ["أقساط ثابتة", "خدمة عملاء متميزة", "تحويل الراتب اختياري"],
-    phone: "920002470",
     website: "https://www.riyadbank.com",
   },
   {
@@ -111,7 +107,6 @@ const defaultBanks: FinancingOffer[] = [
     min_salary: 5500,
     max_dti: 50,
     features: ["معدل ربح تنافسي", "إجراءات سريعة", "تمويل بدون كفيل"],
-    phone: "920000466",
     website: "https://www.alfransi.com.sa",
   },
   {
@@ -124,7 +119,6 @@ const defaultBanks: FinancingOffer[] = [
     min_salary: 4500,
     max_dti: 60,
     features: ["حلول تمويلية متنوعة", "تمويل العقار تحت الإنشاء", "خدمة متكاملة"],
-    phone: "920000606",
     website: "https://www.dantamlik.com",
   },
   {
@@ -137,7 +131,6 @@ const defaultBanks: FinancingOffer[] = [
     min_salary: 5000,
     max_dti: 55,
     features: ["تمويل سكني متوافق مع الشريعة", "برامج دعم سكني", "استشارات مجانية"],
-    phone: "920002434",
     website: "https://www.bidayahome.com",
   },
 ];
@@ -206,17 +199,17 @@ const Financing = () => {
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Fetch financing offers from database
+  // Fetch financing offers from public view (without sensitive contact info)
   const fetchOffers = async () => {
     const { data, error } = await supabase
-      .from('financing_offers')
-      .select('*')
+      .from('financing_offers_public' as any)
+      .select('id, company_name, company_type, logo_url, interest_rate, max_tenure, max_amount, min_salary, max_dti, features, website, description, is_featured, is_approved')
       .eq('is_approved', true)
       .order('is_featured', { ascending: false })
       .order('interest_rate', { ascending: true });
 
     if (!error && data && data.length > 0) {
-      const dbOffers = data.map(offer => ({
+      const dbOffers = (data as any[]).map(offer => ({
         ...offer,
         features: offer.features || [],
       })) as FinancingOffer[];
