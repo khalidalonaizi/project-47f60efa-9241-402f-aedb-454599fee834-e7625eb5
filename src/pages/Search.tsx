@@ -65,8 +65,8 @@ const SearchPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [listingType, setListingType] = useState<"sale" | "rent">("sale");
-  const [priceRange, setPriceRange] = useState([100, 10000000000]);
-  const [areaRange, setAreaRange] = useState([1, 10000000000]);
+  const [maxPrice, setMaxPrice] = useState(10000000000);
+  const [maxArea, setMaxArea] = useState(10000000000);
   const [bedrooms, setBedrooms] = useState<string>("");
   const [bathrooms, setBathrooms] = useState<string>("");
   const [city, setCity] = useState<string>("");
@@ -170,8 +170,8 @@ const SearchPage = () => {
   };
 
   const resetFilters = () => {
-    setPriceRange([100, 10000000000]);
-    setAreaRange([1, 10000000000]);
+    setMaxPrice(10000000000);
+    setMaxArea(10000000000);
     setBedrooms("");
     setBathrooms("");
     setCity("");
@@ -200,8 +200,8 @@ const SearchPage = () => {
     if (propertyType && property.property_type !== propertyType) return false;
     if (bedrooms && property.bedrooms !== parseInt(bedrooms)) return false;
     if (bathrooms && property.bathrooms !== parseInt(bathrooms)) return false;
-    if (property.area && (property.area < areaRange[0] || property.area > areaRange[1])) return false;
-    if (property.price < priceRange[0] || property.price > priceRange[1]) return false;
+    if (property.area && property.area > maxArea) return false;
+    if (property.price > maxPrice) return false;
     if (searchQuery && !property.title.includes(searchQuery) && !property.neighborhood?.includes(searchQuery)) return false;
     if (selectedAmenities.length > 0) {
       const propAmenities = property.amenities || [];
@@ -355,40 +355,40 @@ const SearchPage = () => {
                     </Select>
                   </div>
 
-                  {/* Price & Area Ranges */}
+                  {/* Price & Area Max Filters */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                       <Label className="text-sm font-medium mb-3 block">
-                        نطاق السعر (ر.س)
+                        الحد الأقصى للسعر (ر.س)
                       </Label>
                       <Slider
-                        value={priceRange}
-                        onValueChange={setPriceRange}
+                        value={[maxPrice]}
+                        onValueChange={(v) => setMaxPrice(v[0])}
                         min={100}
                         max={10000000000}
                         step={listingType === "sale" ? 100000 : 1000}
                         className="mb-2"
                       />
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{formatPrice(priceRange[0])}</span>
-                        <span>{formatPrice(priceRange[1])}</span>
+                        <span>100 ر.س</span>
+                        <span>حتى {formatPrice(maxPrice)} ر.س</span>
                       </div>
                     </div>
                     <div>
                       <Label className="text-sm font-medium mb-3 block">
-                        المساحة (م²)
+                        الحد الأقصى للمساحة (م²)
                       </Label>
                       <Slider
-                        value={areaRange}
-                        onValueChange={setAreaRange}
+                        value={[maxArea]}
+                        onValueChange={(v) => setMaxArea(v[0])}
                         min={1}
                         max={10000000000}
                         step={50}
                         className="mb-2"
                       />
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>{formatPrice(areaRange[0])} م²</span>
-                        <span>{formatPrice(areaRange[1])} م²</span>
+                        <span>1 م²</span>
+                        <span>حتى {formatPrice(maxArea)} م²</span>
                       </div>
                     </div>
                   </div>
