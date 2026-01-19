@@ -65,7 +65,9 @@ const SearchPage = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [listingType, setListingType] = useState<"sale" | "rent">("sale");
-  const [maxPrice, setMaxPrice] = useState(1000000);
+  const [minPrice, setMinPrice] = useState(50);
+  const [maxPrice, setMaxPrice] = useState(10000000);
+  const [minArea, setMinArea] = useState(1);
   const [maxArea, setMaxArea] = useState(10000);
   const [bedrooms, setBedrooms] = useState<string>("");
   const [bathrooms, setBathrooms] = useState<string>("");
@@ -170,7 +172,9 @@ const SearchPage = () => {
   };
 
   const resetFilters = () => {
-    setMaxPrice(1000000);
+    setMinPrice(50);
+    setMaxPrice(10000000);
+    setMinArea(1);
     setMaxArea(10000);
     setBedrooms("");
     setBathrooms("");
@@ -182,6 +186,26 @@ const SearchPage = () => {
     setMaxDistance(null);
     setSortByDistance(false);
   };
+
+  // قيم محددة مسبقاً للاختيار السريع
+  const pricePresets = [
+    { label: "50 ألف", value: 50000 },
+    { label: "100 ألف", value: 100000 },
+    { label: "250 ألف", value: 250000 },
+    { label: "500 ألف", value: 500000 },
+    { label: "1 مليون", value: 1000000 },
+    { label: "5 ملايين", value: 5000000 },
+    { label: "10 ملايين", value: 10000000 },
+  ];
+
+  const areaPresets = [
+    { label: "100 م²", value: 100 },
+    { label: "200 م²", value: 200 },
+    { label: "500 م²", value: 500 },
+    { label: "1000 م²", value: 1000 },
+    { label: "5000 م²", value: 5000 },
+    { label: "10000 م²", value: 10000 },
+  ];
 
   // Calculate distances and filter/sort properties
   const propertiesWithDistance = properties.map((property) => {
@@ -200,8 +224,8 @@ const SearchPage = () => {
     if (propertyType && property.property_type !== propertyType) return false;
     if (bedrooms && property.bedrooms !== parseInt(bedrooms)) return false;
     if (bathrooms && property.bathrooms !== parseInt(bathrooms)) return false;
-    if (property.area && property.area > maxArea) return false;
-    if (property.price > maxPrice) return false;
+    if (property.area && (property.area < minArea || property.area > maxArea)) return false;
+    if (property.price < minPrice || property.price > maxPrice) return false;
     if (searchQuery && !property.title.includes(searchQuery) && !property.neighborhood?.includes(searchQuery)) return false;
     if (selectedAmenities.length > 0) {
       const propAmenities = property.amenities || [];
@@ -355,40 +379,96 @@ const SearchPage = () => {
                     </Select>
                   </div>
 
-                  {/* Price & Area Max Filters */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <Label className="text-sm font-medium mb-3 block">
-                        الحد الأقصى للسعر (ر.س)
-                      </Label>
-                      <Slider
-                        value={[maxPrice]}
-                        onValueChange={(v) => setMaxPrice(v[0])}
-                        min={50}
-                        max={1000000}
-                        step={1}
-                        className="mb-2"
-                      />
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>50 ر.س</span>
-                        <span>حتى {formatPrice(maxPrice)} ر.س</span>
+                  {/* Price Filters */}
+                  <div className="mb-6">
+                    <Label className="text-sm font-medium mb-3 block">
+                      نطاق السعر (ر.س)
+                    </Label>
+                    {/* قيم محددة مسبقاً للسعر */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {pricePresets.map((preset) => (
+                        <Button
+                          key={preset.value}
+                          variant={maxPrice === preset.value ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setMaxPrice(preset.value)}
+                          className="text-xs"
+                        >
+                          {preset.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">الحد الأدنى</Label>
+                        <Slider
+                          value={[minPrice]}
+                          onValueChange={(v) => setMinPrice(v[0])}
+                          min={50}
+                          max={10000000}
+                          step={1000}
+                          className="mb-1"
+                        />
+                        <span className="text-sm font-medium">{formatPrice(minPrice)} ر.س</span>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">الحد الأقصى</Label>
+                        <Slider
+                          value={[maxPrice]}
+                          onValueChange={(v) => setMaxPrice(v[0])}
+                          min={50}
+                          max={10000000}
+                          step={1000}
+                          className="mb-1"
+                        />
+                        <span className="text-sm font-medium">{formatPrice(maxPrice)} ر.س</span>
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-sm font-medium mb-3 block">
-                        الحد الأقصى للمساحة (م²)
-                      </Label>
-                      <Slider
-                        value={[maxArea]}
-                        onValueChange={(v) => setMaxArea(v[0])}
-                        min={1}
-                        max={10000}
-                        step={1}
-                        className="mb-2"
-                      />
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>1 م²</span>
-                        <span>حتى {formatPrice(maxArea)} م²</span>
+                  </div>
+
+                  {/* Area Filters */}
+                  <div className="mb-6">
+                    <Label className="text-sm font-medium mb-3 block">
+                      نطاق المساحة (م²)
+                    </Label>
+                    {/* قيم محددة مسبقاً للمساحة */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {areaPresets.map((preset) => (
+                        <Button
+                          key={preset.value}
+                          variant={maxArea === preset.value ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setMaxArea(preset.value)}
+                          className="text-xs"
+                        >
+                          {preset.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">الحد الأدنى</Label>
+                        <Slider
+                          value={[minArea]}
+                          onValueChange={(v) => setMinArea(v[0])}
+                          min={1}
+                          max={10000}
+                          step={10}
+                          className="mb-1"
+                        />
+                        <span className="text-sm font-medium">{formatPrice(minArea)} م²</span>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">الحد الأقصى</Label>
+                        <Slider
+                          value={[maxArea]}
+                          onValueChange={(v) => setMaxArea(v[0])}
+                          min={1}
+                          max={10000}
+                          step={10}
+                          className="mb-1"
+                        />
+                        <span className="text-sm font-medium">{formatPrice(maxArea)} م²</span>
                       </div>
                     </div>
                   </div>
