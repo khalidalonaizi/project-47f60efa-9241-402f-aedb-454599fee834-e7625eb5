@@ -35,8 +35,20 @@ import {
   ChevronDown, 
   ChevronUp,
   LocateFixed,
-  Navigation
+  Navigation,
+  Save,
+  Bookmark,
+  Trash2
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Property {
   id: string;
@@ -80,9 +92,14 @@ const SearchPage = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const [sortByDistance, setSortByDistance] = useState(false);
+  const [savedFilters, setSavedFilters] = useState<any[]>([]);
+  const [filterName, setFilterName] = useState("");
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [loadDialogOpen, setLoadDialogOpen] = useState(false);
   
   const { selectedProperties, toggleProperty, removeProperty, clearAll, isSelected } = usePropertyComparison();
   const { latitude: userLat, longitude: userLng, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
+  const { user } = useAuth();
 
   // Check if filters should be open from URL params
   useEffect(() => {
@@ -97,6 +114,97 @@ const SearchPage = () => {
   useEffect(() => {
     requestLocation();
   }, []);
+
+  // Load saved filters
+  useEffect(() => {
+    if (user) {
+      loadSavedFilters();
+    }
+  }, [user]);
+
+  const loadSavedFilters = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("saved_search_filters")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    
+    if (!error && data) {
+      setSavedFilters(data);
+    }
+  };
+
+  const saveCurrentFilters = async () => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول لحفظ الفلاتر");
+      return;
+    }
+    if (!filterName.trim()) {
+      toast.error("يرجى إدخال اسم للفلتر");
+      return;
+    }
+
+    const filters = {
+      listingType,
+      minPrice,
+      maxPrice,
+      minArea,
+      maxArea,
+      bedrooms,
+      bathrooms,
+      city,
+      neighborhood,
+      propertyType,
+      selectedAmenities,
+      maxDistance,
+      sortByDistance,
+    };
+
+    const { error } = await supabase.from("saved_search_filters").insert({
+      user_id: user.id,
+      name: filterName.trim(),
+      filters,
+    });
+
+    if (error) {
+      toast.error("حدث خطأ أثناء حفظ الفلتر");
+    } else {
+      toast.success("تم حفظ الفلتر بنجاح");
+      setFilterName("");
+      setSaveDialogOpen(false);
+      loadSavedFilters();
+    }
+  };
+
+  const applySavedFilter = (filter: any) => {
+    const f = filter.filters;
+    setListingType(f.listingType || "sale");
+    setMinPrice(f.minPrice || 50);
+    setMaxPrice(f.maxPrice || 10000000);
+    setMinArea(f.minArea || 1);
+    setMaxArea(f.maxArea || 10000);
+    setBedrooms(f.bedrooms || "");
+    setBathrooms(f.bathrooms || "");
+    setCity(f.city || "");
+    setNeighborhood(f.neighborhood || "");
+    setPropertyType(f.propertyType || "");
+    setSelectedAmenities(f.selectedAmenities || []);
+    setMaxDistance(f.maxDistance || null);
+    setSortByDistance(f.sortByDistance || false);
+    setLoadDialogOpen(false);
+    toast.success(`تم تطبيق الفلتر: ${filter.name}`);
+  };
+
+  const deleteSavedFilter = async (id: string) => {
+    const { error } = await supabase.from("saved_search_filters").delete().eq("id", id);
+    if (error) {
+      toast.error("حدث خطأ أثناء حذف الفلتر");
+    } else {
+      toast.success("تم حذف الفلتر");
+      loadSavedFilters();
+    }
+  };
 
   const cities = [
     "الرياض",
@@ -401,27 +509,45 @@ const SearchPage = () => {
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
                         <Label className="text-xs text-muted-foreground mb-1 block">الحد الأدنى</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Input
+                            type="number"
+                            value={minPrice}
+                            onChange={(e) => setMinPrice(Math.max(50, Math.min(10000000, Number(e.target.value) || 50)))}
+                            min={50}
+                            max={10000000}
+                            className="h-8 text-sm"
+                          />
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">ر.س</span>
+                        </div>
                         <Slider
                           value={[minPrice]}
                           onValueChange={(v) => setMinPrice(v[0])}
                           min={50}
                           max={10000000}
                           step={1000}
-                          className="mb-1"
                         />
-                        <span className="text-sm font-medium">{formatPrice(minPrice)} ر.س</span>
                       </div>
                       <div>
                         <Label className="text-xs text-muted-foreground mb-1 block">الحد الأقصى</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Input
+                            type="number"
+                            value={maxPrice}
+                            onChange={(e) => setMaxPrice(Math.max(50, Math.min(10000000, Number(e.target.value) || 10000000)))}
+                            min={50}
+                            max={10000000}
+                            className="h-8 text-sm"
+                          />
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">ر.س</span>
+                        </div>
                         <Slider
                           value={[maxPrice]}
                           onValueChange={(v) => setMaxPrice(v[0])}
                           min={50}
                           max={10000000}
                           step={1000}
-                          className="mb-1"
                         />
-                        <span className="text-sm font-medium">{formatPrice(maxPrice)} ر.س</span>
                       </div>
                     </div>
                   </div>
@@ -448,30 +574,125 @@ const SearchPage = () => {
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
                         <Label className="text-xs text-muted-foreground mb-1 block">الحد الأدنى</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Input
+                            type="number"
+                            value={minArea}
+                            onChange={(e) => setMinArea(Math.max(1, Math.min(10000, Number(e.target.value) || 1)))}
+                            min={1}
+                            max={10000}
+                            className="h-8 text-sm"
+                          />
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">م²</span>
+                        </div>
                         <Slider
                           value={[minArea]}
                           onValueChange={(v) => setMinArea(v[0])}
                           min={1}
                           max={10000}
                           step={10}
-                          className="mb-1"
                         />
-                        <span className="text-sm font-medium">{formatPrice(minArea)} م²</span>
                       </div>
                       <div>
                         <Label className="text-xs text-muted-foreground mb-1 block">الحد الأقصى</Label>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Input
+                            type="number"
+                            value={maxArea}
+                            onChange={(e) => setMaxArea(Math.max(1, Math.min(10000, Number(e.target.value) || 10000)))}
+                            min={1}
+                            max={10000}
+                            className="h-8 text-sm"
+                          />
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">م²</span>
+                        </div>
                         <Slider
                           value={[maxArea]}
                           onValueChange={(v) => setMaxArea(v[0])}
                           min={1}
                           max={10000}
                           step={10}
-                          className="mb-1"
                         />
-                        <span className="text-sm font-medium">{formatPrice(maxArea)} م²</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Save/Load Filters */}
+                  {user && (
+                    <div className="flex gap-2 mb-6 justify-center flex-wrap">
+                      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Save className="w-4 h-4" />
+                            حفظ الفلاتر
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>حفظ إعدادات الفلاتر</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 mt-4">
+                            <div>
+                              <Label>اسم الفلتر</Label>
+                              <Input
+                                value={filterName}
+                                onChange={(e) => setFilterName(e.target.value)}
+                                placeholder="مثال: عقارات الرياض"
+                                className="mt-2"
+                              />
+                            </div>
+                            <Button onClick={saveCurrentFilters} className="w-full">
+                              حفظ
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Dialog open={loadDialogOpen} onOpenChange={setLoadDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Bookmark className="w-4 h-4" />
+                            الفلاتر المحفوظة ({savedFilters.length})
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>الفلاتر المحفوظة</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-2 mt-4 max-h-80 overflow-y-auto">
+                            {savedFilters.length === 0 ? (
+                              <p className="text-center text-muted-foreground py-4">لا توجد فلاتر محفوظة</p>
+                            ) : (
+                              savedFilters.map((filter) => (
+                                <div
+                                  key={filter.id}
+                                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                                >
+                                  <button
+                                    onClick={() => applySavedFilter(filter)}
+                                    className="flex-1 text-right"
+                                  >
+                                    <span className="font-medium">{filter.name}</span>
+                                    <p className="text-xs text-muted-foreground">
+                                      {new Date(filter.created_at).toLocaleDateString("ar-SA")}
+                                    </p>
+                                  </button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => deleteSavedFilter(filter.id)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
 
                   {/* Distance Filter */}
                   <div className="mb-6 p-4 bg-muted/50 rounded-lg">
