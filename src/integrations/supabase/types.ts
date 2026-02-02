@@ -56,6 +56,69 @@ export type Database = {
         }
         Relationships: []
       }
+      appraisal_requests: {
+        Row: {
+          appraiser_id: string | null
+          city: string
+          created_at: string
+          estimated_value: number | null
+          id: string
+          images: string[] | null
+          latitude: number | null
+          longitude: number | null
+          neighborhood: string | null
+          notes: string | null
+          property_address: string
+          property_type: string
+          report_url: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          visit_date: string | null
+          visit_notes: string | null
+        }
+        Insert: {
+          appraiser_id?: string | null
+          city: string
+          created_at?: string
+          estimated_value?: number | null
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          notes?: string | null
+          property_address: string
+          property_type: string
+          report_url?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          visit_date?: string | null
+          visit_notes?: string | null
+        }
+        Update: {
+          appraiser_id?: string | null
+          city?: string
+          created_at?: string
+          estimated_value?: number | null
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          notes?: string | null
+          property_address?: string
+          property_type?: string
+          report_url?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          visit_date?: string | null
+          visit_notes?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -104,7 +167,9 @@ export type Database = {
           interest_rate: number
           is_approved: boolean | null
           is_featured: boolean | null
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           max_amount: number
           max_dti: number
           max_tenure: number
@@ -125,7 +190,9 @@ export type Database = {
           interest_rate: number
           is_approved?: boolean | null
           is_featured?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           max_amount: number
           max_dti?: number
           max_tenure?: number
@@ -146,7 +213,9 @@ export type Database = {
           interest_rate?: number
           is_approved?: boolean | null
           is_featured?: boolean | null
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           max_amount?: number
           max_dti?: number
           max_tenure?: number
@@ -289,34 +358,64 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: Database["public"]["Enums"]["account_type"] | null
           avatar_url: string | null
           bio: string | null
+          commercial_registration: string | null
+          company_address: string | null
+          company_description: string | null
+          company_logo: string | null
+          company_name: string | null
           created_at: string
           full_name: string | null
           id: string
+          latitude: number | null
+          license_number: string | null
+          longitude: number | null
           phone: string | null
           updated_at: string
           user_id: string
+          years_of_experience: number | null
         }
         Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
           avatar_url?: string | null
           bio?: string | null
+          commercial_registration?: string | null
+          company_address?: string | null
+          company_description?: string | null
+          company_logo?: string | null
+          company_name?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          license_number?: string | null
+          longitude?: number | null
           phone?: string | null
           updated_at?: string
           user_id: string
+          years_of_experience?: number | null
         }
         Update: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
           avatar_url?: string | null
           bio?: string | null
+          commercial_registration?: string | null
+          company_address?: string | null
+          company_description?: string | null
+          company_logo?: string | null
+          company_name?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          license_number?: string | null
+          longitude?: number | null
           phone?: string | null
           updated_at?: string
           user_id?: string
+          years_of_experience?: number | null
         }
         Relationships: []
       }
@@ -741,6 +840,11 @@ export type Database = {
       }
     }
     Enums: {
+      account_type:
+        | "individual"
+        | "real_estate_office"
+        | "financing_provider"
+        | "appraiser"
       app_role: "admin" | "user"
     }
     CompositeTypes: {
@@ -869,6 +973,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: [
+        "individual",
+        "real_estate_office",
+        "financing_provider",
+        "appraiser",
+      ],
       app_role: ["admin", "user"],
     },
   },
