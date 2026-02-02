@@ -1,25 +1,26 @@
-import { Building2, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react";
+import { Building2, Facebook, Instagram, Linkedin, Mail, MapPin, Twitter } from "lucide-react";
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const footerLinks = {
     company: [
-      { label: "من نحن", href: "#" },
-      { label: "وظائف", href: "#" },
-      { label: "المدونة", href: "#" },
-      { label: "اتصل بنا", href: "#" },
+      { label: "من نحن", href: "/about" },
+      { label: "وظائف", href: "/careers" },
+      { label: "المدونة", href: "/blog" },
+      { label: "اتصل بنا", href: "/contact" },
     ],
     services: [
-      { label: "بيع العقارات", href: "#" },
-      { label: "تأجير العقارات", href: "#" },
-      { label: "التمويل العقاري", href: "#" },
-      { label: "تقييم العقارات", href: "#" },
+      { label: "بيع العقارات", href: "/search?listing_type=sale" },
+      { label: "تأجير العقارات", href: "/search?listing_type=rent" },
+      { label: "التمويل العقاري", href: "/financing" },
+      { label: "تقييم العقارات", href: "/property-evaluation" },
     ],
     support: [
-      { label: "مركز المساعدة", href: "#" },
-      { label: "الأسئلة الشائعة", href: "#" },
-      { label: "سياسة الخصوصية", href: "#" },
-      { label: "الشروط والأحكام", href: "#" },
+      { label: "مركز المساعدة", href: "/help" },
+      { label: "الأسئلة الشائعة", href: "/faq" },
+      { label: "سياسة الخصوصية", href: "/privacy" },
+      { label: "الشروط والأحكام", href: "/terms" },
     ],
   };
 
@@ -59,23 +60,21 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
+            <Link to="/" className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">عقارات</span>
-            </div>
+            </Link>
             <p className="text-background/70 mb-6 max-w-sm">
               منصتك الأولى للبحث عن العقارات في المملكة العربية السعودية. نوفر لك أكثر من 50,000 عقار في جميع المناطق.
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-background/70">
-                <Phone className="w-4 h-4" />
-                <span>920000000</span>
-              </div>
-              <div className="flex items-center gap-2 text-background/70">
                 <Mail className="w-4 h-4" />
-                <span>info@aqarat.sa</span>
+                <a href="mailto:info@aqarat.cloud" className="hover:text-primary transition-colors">
+                  info@aqarat.cloud
+                </a>
               </div>
               <div className="flex items-center gap-2 text-background/70">
                 <MapPin className="w-4 h-4" />
@@ -90,12 +89,12 @@ const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-background/70 hover:text-primary transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -106,12 +105,12 @@ const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.services.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-background/70 hover:text-primary transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -122,12 +121,12 @@ const Footer = () => {
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-background/70 hover:text-primary transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
