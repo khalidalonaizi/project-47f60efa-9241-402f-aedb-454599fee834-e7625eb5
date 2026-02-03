@@ -5,14 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
-import { Building2, Mail, Lock, User, ArrowRight, CheckCircle } from 'lucide-react';
-
+import { Building2, Mail, Lock, User, ArrowRight, CheckCircle, Briefcase, Landmark, ClipboardCheck } from 'lucide-react';
 
 const SITE_NAME = 'عقار السعودية';
+
+const accountTypes = [
+  { value: 'individual', label: 'مستخدم فردي', icon: User, description: 'للبحث عن عقارات أو نشر إعلانات' },
+  { value: 'real_estate_office', label: 'مكتب عقاري', icon: Building2, description: 'لإدارة العقارات والمكتب' },
+  { value: 'financing_provider', label: 'جهة تمويلية', icon: Landmark, description: 'لنشر عروض التمويل العقاري' },
+  { value: 'appraiser', label: 'مقيم عقاري', icon: ClipboardCheck, description: 'لتقديم خدمات التقييم العقاري' },
+];
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email({ message: 'البريد الإلكتروني غير صالح' }),
@@ -28,6 +36,9 @@ const signupSchema = z.object({
   email: z.string().trim().email({ message: 'البريد الإلكتروني غير صالح' }),
   password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
   confirmPassword: z.string(),
+  accountType: z.enum(['individual', 'real_estate_office', 'financing_provider', 'appraiser'], { 
+    required_error: 'يرجى اختيار نوع الحساب' 
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'كلمات المرور غير متطابقة',
   path: ['confirmPassword'],
@@ -51,6 +62,7 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  const [signupAccountType, setSignupAccountType] = useState<string>('');
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -71,7 +83,6 @@ const Auth = () => {
       }
     });
 
-    // Also check URL hash for recovery token (Supabase sends tokens in hash)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     if (hashParams.get('type') === 'recovery') {
       setIsResetMode(true);
@@ -82,9 +93,38 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !isResetMode) {
+      // Redirect based on account type
+      redirectToDashboard(user.id);
+    }
+  }, [user, isResetMode]);
+
+  const redirectToDashboard = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('user_id', userId)
+        .single();
+
+      const accountType = profile?.account_type || 'individual';
+      
+      switch (accountType) {
+        case 'real_estate_office':
+          navigate('/dashboard/office');
+          break;
+        case 'financing_provider':
+          navigate('/dashboard/financing');
+          break;
+        case 'appraiser':
+          navigate('/dashboard/appraiser');
+          break;
+        default:
+          navigate('/dashboard/user');
+      }
+    } catch (error) {
       navigate('/');
     }
-  }, [user, navigate, isResetMode]);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +146,7 @@ const Auth = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error, data } = await signIn(loginEmail, loginPassword);
     setIsLoading(false);
 
     if (error) {
@@ -124,7 +164,9 @@ const Auth = () => {
         title: 'مرحباً!',
         description: 'تم تسجيل الدخول بنجاح',
       });
-      navigate('/');
+      if (data?.user) {
+        redirectToDashboard(data.user.id);
+      }
     }
   };
 
@@ -137,7 +179,8 @@ const Auth = () => {
         fullName: signupName, 
         email: signupEmail, 
         password: signupPassword,
-        confirmPassword: signupConfirmPassword 
+        confirmPassword: signupConfirmPassword,
+        accountType: signupAccountType,
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -153,7 +196,16 @@ const Auth = () => {
     }
 
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
+    const { error, data } = await signUp(signupEmail, signupPassword, signupName);
+    
+    if (!error && data?.user) {
+      // Update profile with account type
+      await supabase
+        .from('profiles')
+        .update({ account_type: signupAccountType as any })
+        .eq('user_id', data.user.id);
+    }
+    
     setIsLoading(false);
 
     if (error) {
@@ -169,13 +221,14 @@ const Auth = () => {
     } else {
       toast({
         title: `مرحباً بك في ${SITE_NAME}! 🎉`,
-        description: `تم إنشاء حسابك بنجاح. تم إرسال رابط تأكيد من ${SITE_NAME} إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد لتفعيل حسابك.`,
+        description: `تم إنشاء حسابك بنجاح. تم إرسال رابط تأكيد إلى بريدك الإلكتروني.`,
         duration: 8000,
       });
       setSignupEmail('');
       setSignupPassword('');
       setSignupConfirmPassword('');
       setSignupName('');
+      setSignupAccountType('');
     }
   };
 
@@ -212,8 +265,8 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: `تم الإرسال من ${SITE_NAME}! 📧`,
-        description: `تم إرسال رابط إعادة تعيين كلمة المرور من ${SITE_NAME} إلى بريدك الإلكتروني`,
+        title: `تم الإرسال! 📧`,
+        description: `تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني`,
         duration: 6000,
       });
       setShowForgotPassword(false);
@@ -248,8 +301,6 @@ const Auth = () => {
       let errorMessage = 'حدث خطأ أثناء إعادة تعيين كلمة المرور';
       if (error.message.includes('Auth session missing')) {
         errorMessage = 'انتهت صلاحية الرابط. يرجى طلب رابط إعادة تعيين جديد';
-      } else if (error.message.includes('same password')) {
-        errorMessage = 'لا يمكن استخدام نفس كلمة المرور القديمة';
       }
       toast({
         title: 'خطأ',
@@ -260,12 +311,12 @@ const Auth = () => {
       setResetSuccess(true);
       toast({
         title: 'تم بنجاح! 🎉',
-        description: `تم إعادة تعيين كلمة المرور بنجاح في ${SITE_NAME}`,
+        description: `تم إعادة تعيين كلمة المرور بنجاح`,
       });
     }
   };
 
-  // Show reset password form if coming from reset link
+  // Reset password form
   if (isResetMode) {
     return (
       <div className="min-h-screen hero-gradient flex items-center justify-center p-4">
@@ -284,9 +335,7 @@ const Auth = () => {
               {resetSuccess ? 'تم إعادة تعيين كلمة المرور' : 'إعادة تعيين كلمة المرور'}
             </CardTitle>
             <CardDescription>
-              {resetSuccess 
-                ? `يمكنك الآن تسجيل الدخول في ${SITE_NAME} بكلمة المرور الجديدة`
-                : 'أدخل كلمة المرور الجديدة'}
+              {resetSuccess ? 'يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة' : 'أدخل كلمة المرور الجديدة'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -366,7 +415,7 @@ const Auth = () => {
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div className="text-center mb-4">
                     <h3 className="font-semibold text-lg">نسيت كلمة المرور؟</h3>
-                    <p className="text-sm text-muted-foreground">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين من {SITE_NAME}</p>
+                    <p className="text-sm text-muted-foreground">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين</p>
                   </div>
                   <div className="space-y-2">
                     <div className="relative">
@@ -440,18 +489,40 @@ const Auth = () => {
                   <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                     {isLoading ? 'جاري التحميل...' : 'تسجيل الدخول'}
                   </Button>
-                  
                 </form>
               )}
             </TabsContent>
             
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
+                {/* Account Type Selection */}
+                <div className="space-y-2">
+                  <Label>نوع الحساب</Label>
+                  <Select value={signupAccountType} onValueChange={setSignupAccountType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر نوع الحساب" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accountTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center gap-2">
+                            <type.icon className="h-4 w-4" />
+                            <div>
+                              <span className="font-medium">{type.label}</span>
+                              <p className="text-xs text-muted-foreground">{type.description}</p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.accountType && <p className="text-destructive text-sm">{errors.accountType}</p>}
+                </div>
+
                 <div className="space-y-2">
                   <div className="relative">
                     <User className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      type="text"
                       placeholder="الاسم الكامل"
                       value={signupName}
                       onChange={(e) => setSignupName(e.target.value)}
@@ -460,6 +531,7 @@ const Auth = () => {
                   </div>
                   {errors.fullName && <p className="text-destructive text-sm">{errors.fullName}</p>}
                 </div>
+                
                 <div className="space-y-2">
                   <div className="relative">
                     <Mail className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -473,6 +545,7 @@ const Auth = () => {
                   </div>
                   {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
                 </div>
+                
                 <div className="space-y-2">
                   <div className="relative">
                     <Lock className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -487,6 +560,7 @@ const Auth = () => {
                   {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
                   <PasswordStrengthIndicator password={signupPassword} />
                 </div>
+                
                 <div className="space-y-2">
                   <div className="relative">
                     <Lock className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -500,8 +574,9 @@ const Auth = () => {
                   </div>
                   {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
                 </div>
+                
                 <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
-                  {isLoading ? 'جاري التحميل...' : 'إنشاء حساب'}
+                  {isLoading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
                 </Button>
               </form>
             </TabsContent>

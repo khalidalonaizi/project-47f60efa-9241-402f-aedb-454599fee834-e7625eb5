@@ -27,6 +27,12 @@ import Favorites from "./pages/Favorites";
 import MapSearchPage from "./pages/MapSearchPage";
 import NotFound from "./pages/NotFound";
 
+// Dashboard pages
+import UserDashboard from "./pages/dashboard/UserDashboard";
+import OfficeDashboard from "./pages/dashboard/OfficeDashboard";
+import FinancingDashboard from "./pages/dashboard/FinancingDashboard";
+import AppraiserDashboard from "./pages/dashboard/AppraiserDashboard";
+
 // New pages
 import AboutUs from "./pages/AboutUs";
 import Careers from "./pages/Careers";
@@ -64,6 +70,13 @@ const App = () => (
               <Route path="/admin/financing-offers" element={<FinancingOffersManagement />} />
               <Route path="/admin/financing-offers/:id" element={<FinancingOfferDetails />} />
               <Route path="/admin/financing-offers/:id/edit" element={<EditFinancingOffer />} />
+              <Route path="/financing/:id" element={<FinancingOfferDetails />} />
+              
+              {/* Dashboard Routes */}
+              <Route path="/dashboard/user" element={<UserDashboard />} />
+              <Route path="/dashboard/office" element={<OfficeDashboard />} />
+              <Route path="/dashboard/financing" element={<FinancingDashboard />} />
+              <Route path="/dashboard/appraiser" element={<AppraiserDashboard />} />
               <Route path="/property/:id" element={<PropertyDetails />} />
               <Route path="/neighborhood-guide" element={<NeighborhoodGuide />} />
               <Route path="/financing" element={<Financing />} />
