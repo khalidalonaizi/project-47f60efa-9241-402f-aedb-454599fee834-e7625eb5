@@ -73,22 +73,35 @@ const MapSearchPage = () => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
 
-  // Create custom icons for sale and rent
+  // Create custom icons with consistent platform colors
   const createIcon = (type: string) => {
+    // Green for sale, Blue for rent - consistent across all maps
     const color = type === 'sale' ? '#22c55e' : '#3b82f6';
     return L.divIcon({
       className: 'custom-marker',
       html: `<div style="
-        background-color: ${color};
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        background: ${color};
         border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        cursor: pointer;
-      "></div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          width: 10px;
+          height: 10px;
+          background: white;
+          border-radius: 50%;
+          transform: rotate(45deg);
+        "></div>
+      </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
     });
   };
 
@@ -318,11 +331,11 @@ const MapSearchPage = () => {
             <div className="absolute top-4 right-4 bg-card/95 backdrop-blur rounded-lg shadow-lg p-3 z-[1000]">
               <p className="text-sm font-bold mb-2">دليل الألوان</p>
               <div className="flex items-center gap-2 text-sm mb-1">
-                <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow"></div>
+                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#22c55e' }}></div>
                 <span>للبيع</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow"></div>
+                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#3b82f6' }}></div>
                 <span>للإيجار</span>
               </div>
             </div>

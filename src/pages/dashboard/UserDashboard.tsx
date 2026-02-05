@@ -417,8 +417,10 @@ const UserDashboard = () => {
                   price: p.price,
                   latitude: p.latitude!,
                   longitude: p.longitude!,
-                  type: "property"
+                  type: "property" as const,
+                  listingType: p.listing_type as "sale" | "rent"
                 }))}
+                onMarkerClick={(id) => navigate(`/property/${id}`)}
               />
             </CardContent>
           </Card>

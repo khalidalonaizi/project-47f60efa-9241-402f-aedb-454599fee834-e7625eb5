@@ -11,7 +11,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-// Custom marker icons
+// Custom marker icons with consistent colors
 const createCustomIcon = (color: string) => {
   return L.divIcon({
     className: "custom-marker",
@@ -43,9 +43,11 @@ const createCustomIcon = (color: string) => {
   });
 };
 
-const propertyIcon = createCustomIcon("#22c55e"); // Green for properties
+// Consistent marker colors across the platform
+const propertyIcon = createCustomIcon("#22c55e"); // Green for properties (sale)
+const rentPropertyIcon = createCustomIcon("#3b82f6"); // Blue for properties (rent)
 const financingIcon = createCustomIcon("#ef4444"); // Red for financing
-const appraisalIcon = createCustomIcon("#3b82f6"); // Blue for appraisals
+const appraisalIcon = createCustomIcon("#eab308"); // Yellow for appraisals
 const userLocationIcon = createCustomIcon("#8b5cf6"); // Purple for user location
 
 interface MapItem {
@@ -54,7 +56,8 @@ interface MapItem {
   price?: number;
   latitude: number;
   longitude: number;
-  type: "property" | "financing" | "appraisal" | "user";
+  type: "property" | "property_rent" | "financing" | "appraisal" | "user";
+  listingType?: "sale" | "rent";
 }
 
 interface PropertyMapViewProps {
@@ -136,9 +139,14 @@ const PropertyMapView = ({ properties, onMarkerClick, showUserLocation = false }
         case "user":
           icon = userLocationIcon;
           break;
+        case "property_rent":
+          icon = rentPropertyIcon;
+          break;
         default:
-          icon = propertyIcon;
+          // For properties, check listingType
+          icon = item.listingType === "rent" ? rentPropertyIcon : propertyIcon;
       }
+
 
       const marker = L.marker([item.latitude, item.longitude], { icon }).addTo(
         mapRef.current!
@@ -196,20 +204,24 @@ const PropertyMapView = ({ properties, onMarkerClick, showUserLocation = false }
         <p className="text-xs font-semibold mb-2">دليل الألوان</p>
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-green-500" />
-            <span>عقارات</span>
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+            <span>عقارات للبيع</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
+            <span>عقارات للإيجار</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ef4444' }} />
             <span>عروض تمويل</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#eab308' }} />
             <span>طلبات تقييم</span>
           </div>
           {showUserLocation && (
             <div className="flex items-center gap-2 text-xs">
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8b5cf6' }} />
               <span>موقعك</span>
             </div>
           )}
