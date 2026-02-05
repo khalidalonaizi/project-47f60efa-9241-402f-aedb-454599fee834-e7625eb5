@@ -396,11 +396,14 @@ const AppraiserDashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-blue-500" />
+                <MapPin className="w-5 h-5" style={{ color: '#eab308' }} />
                 خريطة العقارات المُقيَّمة
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                عقارات التقييم تظهر بأيقونات صفراء على الخريطة
+              </p>
               <PropertyMapView
                 properties={requests.filter(r => r.latitude && r.longitude).map(r => ({
                   id: r.id,
@@ -408,8 +411,12 @@ const AppraiserDashboard = () => {
                   price: r.estimated_value || undefined,
                   latitude: r.latitude!,
                   longitude: r.longitude!,
-                  type: "appraisal"
+                  type: "appraisal" as const
                 }))}
+                onMarkerClick={(id) => {
+                  // Could navigate to request details
+                  toast({ title: "طلب التقييم", description: `عرض تفاصيل الطلب #${id.slice(0, 8)}` });
+                }}
               />
             </CardContent>
           </Card>

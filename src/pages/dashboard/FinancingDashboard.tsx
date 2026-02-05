@@ -557,19 +557,23 @@ const FinancingDashboard = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-red-500" />
-                خريطة العملاء وطلبات التمويل
+                <MapPin className="w-5 h-5" style={{ color: '#ef4444' }} />
+                خريطة فروع التمويل
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                فروع البنوك وشركات التمويل تظهر بأيقونات حمراء على الخريطة
+              </p>
               <PropertyMapView
                 properties={offers.filter(o => o.latitude && o.longitude).map(o => ({
                   id: o.id,
                   title: o.company_name,
                   latitude: o.latitude!,
                   longitude: o.longitude!,
-                  type: "financing"
+                  type: "financing" as const
                 }))}
+                onMarkerClick={(id) => navigate(`/financing/${id}`)}
               />
             </CardContent>
           </Card>

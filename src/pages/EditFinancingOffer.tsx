@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LogoUpload from '@/components/LogoUpload';
+import LocationPicker from '@/components/LocationPicker';
 import {
   Select,
   SelectContent,
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowRight, Loader2, Save, Building2, Landmark, BadgeDollarSign, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Loader2, Save, Building2, Landmark, BadgeDollarSign, Plus, Trash2, MapPin } from 'lucide-react';
 
 interface FinancingOffer {
   id: string;
@@ -38,6 +39,8 @@ interface FinancingOffer {
   is_featured: boolean | null;
   is_approved: boolean | null;
   user_id: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const EditFinancingOffer = () => {
@@ -64,7 +67,8 @@ const EditFinancingOffer = () => {
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
   const [description, setDescription] = useState('');
-
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
@@ -118,6 +122,8 @@ const EditFinancingOffer = () => {
     setEmail(data.email || '');
     setWebsite(data.website || '');
     setDescription(data.description || '');
+    setLatitude(data.latitude || undefined);
+    setLongitude(data.longitude || undefined);
     setLoading(false);
   };
 
@@ -148,6 +154,8 @@ const EditFinancingOffer = () => {
         email: email || null,
         website: website || null,
         description: description || null,
+        latitude: latitude || null,
+        longitude: longitude || null,
       })
       .eq('id', id);
 
@@ -412,6 +420,30 @@ const EditFinancingOffer = () => {
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Location Map */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-destructive" />
+                موقع الفرع على الخريطة
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                حدد موقع البنك أو شركة التمويل على الخريطة (سيظهر بأيقونة حمراء)
+              </p>
+              <LocationPicker
+                latitude={latitude}
+                longitude={longitude}
+                onLocationChange={(lat, lng) => {
+                  setLatitude(lat);
+                  setLongitude(lng);
+                }}
+                autoDetectLocation={false}
+              />
             </CardContent>
           </Card>
 
