@@ -38,7 +38,10 @@ import {
   Navigation,
   Save,
   Bookmark,
-  Trash2
+  Trash2,
+  Share2,
+  Copy,
+  Check
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -96,18 +99,101 @@ const SearchPage = () => {
   const [filterName, setFilterName] = useState("");
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [loadDialogOpen, setLoadDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   const { selectedProperties, toggleProperty, removeProperty, clearAll, isSelected } = usePropertyComparison();
   const { latitude: userLat, longitude: userLng, loading: geoLoading, error: geoError, requestLocation } = useGeolocation();
   const { user } = useAuth();
 
-  // Check if filters should be open from URL params
+  // Generate shareable URL with all filters
+  const generateShareableUrl = () => {
+    const params = new URLSearchParams();
+    if (listingType) params.set('type', listingType);
+    if (city) params.set('city', city);
+    if (neighborhood) params.set('neighborhood', neighborhood);
+    if (propertyType) params.set('propertyType', propertyType);
+    if (bedrooms) params.set('bedrooms', bedrooms);
+    if (bathrooms) params.set('bathrooms', bathrooms);
+    if (minPrice !== 50) params.set('minPrice', minPrice.toString());
+    if (maxPrice !== 10000000) params.set('maxPrice', maxPrice.toString());
+    if (minArea !== 1) params.set('minArea', minArea.toString());
+    if (maxArea !== 10000) params.set('maxArea', maxArea.toString());
+    if (searchQuery) params.set('q', searchQuery);
+    if (selectedAmenities.length > 0) params.set('amenities', selectedAmenities.join(','));
+    if (maxDistance) params.set('maxDistance', maxDistance.toString());
+    if (sortByDistance) params.set('sortByDistance', 'true');
+    
+    return `${window.location.origin}/search?${params.toString()}`;
+  };
+
+  const shareSearchUrl = async () => {
+    const url = generateShareableUrl();
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'بحث عقارات',
+          text: 'شاهد نتائج البحث عن العقارات',
+          url: url,
+        });
+      } catch (err) {
+        // User cancelled or share failed, copy to clipboard instead
+        copyToClipboard(url);
+      }
+    } else {
+      copyToClipboard(url);
+    }
+  };
+
+  const copyToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("تم نسخ رابط البحث");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("فشل نسخ الرابط");
+    }
+  };
+
+  // Load filters from URL on mount
   useEffect(() => {
     const openFilters = searchParams.get('openFilters');
     if (openFilters === 'true') {
       setFiltersOpen(true);
       setShowFilters(true);
     }
+    
+    // Load filters from URL
+    const urlType = searchParams.get('type');
+    const urlCity = searchParams.get('city');
+    const urlNeighborhood = searchParams.get('neighborhood');
+    const urlPropertyType = searchParams.get('propertyType');
+    const urlBedrooms = searchParams.get('bedrooms');
+    const urlBathrooms = searchParams.get('bathrooms');
+    const urlMinPrice = searchParams.get('minPrice');
+    const urlMaxPrice = searchParams.get('maxPrice');
+    const urlMinArea = searchParams.get('minArea');
+    const urlMaxArea = searchParams.get('maxArea');
+    const urlQuery = searchParams.get('q');
+    const urlAmenities = searchParams.get('amenities');
+    const urlMaxDistance = searchParams.get('maxDistance');
+    const urlSortByDistance = searchParams.get('sortByDistance');
+    
+    if (urlType === 'sale' || urlType === 'rent') setListingType(urlType);
+    if (urlCity) setCity(urlCity);
+    if (urlNeighborhood) setNeighborhood(urlNeighborhood);
+    if (urlPropertyType) setPropertyType(urlPropertyType);
+    if (urlBedrooms) setBedrooms(urlBedrooms);
+    if (urlBathrooms) setBathrooms(urlBathrooms);
+    if (urlMinPrice) setMinPrice(parseInt(urlMinPrice));
+    if (urlMaxPrice) setMaxPrice(parseInt(urlMaxPrice));
+    if (urlMinArea) setMinArea(parseInt(urlMinArea));
+    if (urlMaxArea) setMaxArea(parseInt(urlMaxArea));
+    if (urlQuery) setSearchQuery(urlQuery);
+    if (urlAmenities) setSelectedAmenities(urlAmenities.split(','));
+    if (urlMaxDistance) setMaxDistance(parseInt(urlMaxDistance));
+    if (urlSortByDistance === 'true') setSortByDistance(true);
   }, [searchParams]);
 
   // Auto-request location on mount
@@ -693,6 +779,19 @@ const SearchPage = () => {
                       </Dialog>
                     </div>
                   )}
+
+                  {/* Share URL Button */}
+                  <div className="flex gap-2 mb-6 justify-center">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-2"
+                      onClick={shareSearchUrl}
+                    >
+                      {copied ? <Check className="w-4 h-4 text-success" /> : <Share2 className="w-4 h-4" />}
+                      {copied ? "تم النسخ!" : "مشاركة رابط البحث"}
+                    </Button>
+                  </div>
 
                   {/* Distance Filter */}
                   <div className="mb-6 p-4 bg-muted/50 rounded-lg">

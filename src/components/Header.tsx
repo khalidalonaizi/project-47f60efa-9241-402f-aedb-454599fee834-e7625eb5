@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List, MessageSquare } from "lucide-react";
-import { useState } from "react";
+import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List, MessageSquare, LayoutDashboard } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,37 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const [accountType, setAccountType] = useState<string | null>(null);
+
+  // Get user account type for dashboard routing
+  useEffect(() => {
+    const fetchAccountType = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.account_type) {
+        setAccountType(data.account_type);
+      }
+    };
+    fetchAccountType();
+  }, [user]);
+
+  // Get dashboard route based on account type
+  const getDashboardRoute = () => {
+    switch (accountType) {
+      case "real_estate_office":
+        return "/dashboard/office";
+      case "financing_provider":
+        return "/dashboard/financing";
+      case "appraiser":
+        return "/dashboard/appraiser";
+      default:
+        return "/dashboard/user";
+    }
+  };
 
   // عدد الرسائل غير المقروءة
   const { data: unreadCount = 0 } = useQuery({
@@ -103,6 +134,13 @@ const Header = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to={getDashboardRoute()} className="flex items-center gap-2 cursor-pointer text-primary font-medium">
+                      <LayoutDashboard className="w-4 h-4" />
+                      لوحة التحكم
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/my-properties" className="flex items-center gap-2 cursor-pointer">
                       <List className="w-4 h-4" />
@@ -199,6 +237,14 @@ const Header = () => {
               
               {user && (
                 <>
+                  <Link
+                    to={getDashboardRoute()}
+                    className="py-2 px-4 text-primary font-medium hover:bg-accent rounded-lg transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    لوحة التحكم
+                  </Link>
                   <Link
                     to="/my-properties"
                     className="py-2 px-4 text-muted-foreground hover:text-primary hover:bg-accent rounded-lg transition-colors"
