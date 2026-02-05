@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface Notification {
   id: string;
@@ -33,7 +34,13 @@ export function NotificationBell() {
   useEffect(() => {
     if (user) {
       fetchNotifications();
-      subscribeToNotifications();
+      const cleanup = subscribeToNotifications();
+      const messagesCleanup = subscribeToMessages();
+      
+      return () => {
+        cleanup();
+        messagesCleanup();
+      };
     }
   }, [user]);
 
@@ -66,6 +73,40 @@ export function NotificationBell() {
           const newNotification = payload.new as Notification;
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
+          
+          // Show toast notification
+          toast.info(newNotification.title, {
+            description: newNotification.message,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const subscribeToMessages = () => {
+    const channel = supabase
+      .channel('messages-notification-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user!.id}`,
+        },
+        (payload) => {
+          // Show toast for new message
+          toast.info("رسالة جديدة", {
+            description: (payload.new as any).subject,
+            action: {
+              label: "عرض",
+              onClick: () => window.location.href = "/messages",
+            },
+          });
         }
       )
       .subscribe();
