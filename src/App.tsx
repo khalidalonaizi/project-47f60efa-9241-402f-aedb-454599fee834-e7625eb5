@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import FeaturedAdsManagement from "./pages/FeaturedAdsManagement";
 import FinancingOffersManagement from "./pages/FinancingOffersManagement";
 import FinancingOfferDetails from "./pages/FinancingOfferDetails";
+import FinancingOfferPublicDetails from "./pages/FinancingOfferPublicDetails";
 import EditFinancingOffer from "./pages/EditFinancingOffer";
 import PropertyDetails from "./pages/PropertyDetails";
 import NeighborhoodGuide from "./pages/NeighborhoodGuide";
@@ -32,6 +33,10 @@ import UserDashboard from "./pages/dashboard/UserDashboard";
 import OfficeDashboard from "./pages/dashboard/OfficeDashboard";
 import FinancingDashboard from "./pages/dashboard/FinancingDashboard";
 import AppraiserDashboard from "./pages/dashboard/AppraiserDashboard";
+import PropertyManagementRequests from "./pages/dashboard/PropertyManagementRequests";
+
+// Other pages
+import PropertyManagementRequest from "./pages/PropertyManagementRequest";
 
 // New pages
 import AboutUs from "./pages/AboutUs";
@@ -70,13 +75,18 @@ const App = () => (
               <Route path="/admin/financing-offers" element={<FinancingOffersManagement />} />
               <Route path="/admin/financing-offers/:id" element={<FinancingOfferDetails />} />
               <Route path="/admin/financing-offers/:id/edit" element={<EditFinancingOffer />} />
-              <Route path="/financing/:id" element={<FinancingOfferDetails />} />
+              <Route path="/financing/:id" element={<FinancingOfferPublicDetails />} />
               
               {/* Dashboard Routes */}
               <Route path="/dashboard/user" element={<UserDashboard />} />
               <Route path="/dashboard/office" element={<OfficeDashboard />} />
+              <Route path="/dashboard/office/property-management" element={<PropertyManagementRequests />} />
               <Route path="/dashboard/financing" element={<FinancingDashboard />} />
               <Route path="/dashboard/appraiser" element={<AppraiserDashboard />} />
+              
+              {/* Property Management Request */}
+              <Route path="/property-management-request" element={<PropertyManagementRequest />} />
+              
               <Route path="/property/:id" element={<PropertyDetails />} />
               <Route path="/neighborhood-guide" element={<NeighborhoodGuide />} />
               <Route path="/financing" element={<Financing />} />
