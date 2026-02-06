@@ -453,9 +453,23 @@ const OfficeDashboard = () => {
 
         <TabsContent value="requests">
           <Card>
-            <CardContent className="py-12 text-center">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>طلبات إدارة الأملاك</CardTitle>
+              <Button variant="outline" asChild>
+                <Link to="/dashboard/office/property-management">
+                  عرض جميع الطلبات
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="py-8 text-center">
               <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد طلبات حالياً</p>
+              <p className="text-muted-foreground mb-4">إدارة طلبات إدارة الأملاك الواردة</p>
+              <Button asChild>
+                <Link to="/dashboard/office/property-management">
+                  <FileText className="w-4 h-4 ml-2" />
+                  عرض الطلبات
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

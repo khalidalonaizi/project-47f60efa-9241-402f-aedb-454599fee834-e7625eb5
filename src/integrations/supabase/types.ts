@@ -515,6 +515,54 @@ export type Database = {
         }
         Relationships: []
       }
+      property_management_requests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          office_id: string
+          property_address: string
+          property_latitude: number | null
+          property_longitude: number | null
+          property_type: string
+          requester_name: string
+          requester_phone: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          office_id: string
+          property_address: string
+          property_latitude?: number | null
+          property_longitude?: number | null
+          property_type: string
+          requester_name: string
+          requester_phone: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          office_id?: string
+          property_address?: string
+          property_latitude?: number | null
+          property_longitude?: number | null
+          property_type?: string
+          requester_name?: string
+          requester_phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       property_reviews: {
         Row: {
           comment: string | null
