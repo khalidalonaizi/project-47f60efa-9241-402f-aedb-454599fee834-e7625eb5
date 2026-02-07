@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PropertyMapView from "@/components/dashboard/PropertyMapView";
 import LogoUpload from "@/components/LogoUpload";
+import LocationPicker from "@/components/LocationPicker";
 import {
   Building2,
   Eye,
@@ -21,15 +22,13 @@ import {
   TrendingUp,
   MapPin,
   Edit,
-  Trash2,
   Loader2,
   FileText,
   Users,
   BarChart3,
   Save,
-  Phone,
-  Mail,
-  Globe
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -61,10 +60,24 @@ interface OfficeProfile {
   longitude: number | null;
 }
 
+interface PropertyManagementRequest {
+  id: string;
+  requester_name: string;
+  requester_phone: string;
+  property_type: string;
+  property_address: string;
+  property_latitude: number | null;
+  property_longitude: number | null;
+  notes: string | null;
+  status: string;
+  created_at: string;
+}
+
 const OfficeDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [requests, setRequests] = useState<PropertyManagementRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [saving, setSaving] = useState(false);
@@ -106,6 +119,15 @@ const OfficeDashboard = () => {
         .order("created_at", { ascending: false });
 
       setProperties(propertiesData || []);
+
+      // Fetch property management requests
+      const { data: requestsData } = await supabase
+        .from("property_management_requests")
+        .select("*")
+        .eq("office_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setRequests(requestsData || []);
 
       // Fetch office profile
       const { data: profileData } = await supabase
@@ -153,6 +175,42 @@ const OfficeDashboard = () => {
     }
   };
 
+  const handleRequestStatus = async (requestId: string, status: 'accepted' | 'rejected') => {
+    const { error } = await supabase
+      .from("property_management_requests")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", requestId);
+
+    if (error) {
+      toast({ title: "خطأ", description: "تعذر تحديث حالة الطلب", variant: "destructive" });
+    } else {
+      // Send notification to user
+      const request = requests.find(r => r.id === requestId);
+      if (request) {
+        const { data: requestData } = await supabase
+          .from("property_management_requests")
+          .select("user_id")
+          .eq("id", requestId)
+          .single();
+        
+        if (requestData) {
+          await supabase.from("notifications").insert({
+            user_id: requestData.user_id,
+            type: "property_management",
+            title: status === 'accepted' ? "تم قبول طلبك" : "تم رفض طلبك",
+            message: `${status === 'accepted' ? 'تم قبول' : 'تم رفض'} طلب إدارة الأملاك الخاص بك من ${officeProfile.company_name || 'المكتب العقاري'}`,
+          });
+        }
+      }
+
+      toast({ 
+        title: status === 'accepted' ? "تم القبول" : "تم الرفض", 
+        description: `تم ${status === 'accepted' ? 'قبول' : 'رفض'} الطلب وإشعار العميل`
+      });
+      fetchData();
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
@@ -170,6 +228,17 @@ const OfficeDashboard = () => {
     return <Badge className="bg-green-500">نشط</Badge>;
   };
 
+  const getRequestStatusBadge = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return <Badge className="bg-green-500">مقبول</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive">مرفوض</Badge>;
+      default:
+        return <Badge variant="secondary">قيد المراجعة</Badge>;
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -181,13 +250,15 @@ const OfficeDashboard = () => {
   const totalProperties = properties.length;
   const activeProperties = properties.filter(p => p.status === "active" || p.is_approved).length;
   const pendingProperties = properties.filter(p => p.status === "pending" || !p.is_approved).length;
+  const pendingRequests = requests.filter(r => r.status === 'pending').length;
 
   const menuItems = [
     { id: "overview", label: "الرئيسية", icon: TrendingUp },
     { id: "office-info", label: "بيانات المكتب", icon: Building2 },
+    { id: "location", label: "موقع المكتب", icon: MapPin },
     { id: "properties", label: "إعلانات المكتب", icon: FileText },
     { id: "map", label: "خريطة الإعلانات", icon: MapPin },
-    { id: "requests", label: "طلبات العملاء", icon: Users },
+    { id: "requests", label: "طلبات إدارة الأملاك", icon: Users },
     { id: "reports", label: "التقارير", icon: BarChart3 },
     { id: "messages", label: "الرسائل", icon: MessageSquare },
   ];
@@ -228,8 +299,8 @@ const OfficeDashboard = () => {
             <Card>
               <CardContent className="p-4 text-center">
                 <Users className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-                <p className="text-2xl font-bold">0</p>
-                <p className="text-sm text-muted-foreground">طلبات العملاء</p>
+                <p className="text-2xl font-bold">{pendingRequests}</p>
+                <p className="text-sm text-muted-foreground">طلبات جديدة</p>
               </CardContent>
             </Card>
           </div>
@@ -250,6 +321,12 @@ const OfficeDashboard = () => {
                 <Edit className="w-4 h-4 ml-2" />
                 تعديل بيانات المكتب
               </Button>
+              {pendingRequests > 0 && (
+                <Button variant="secondary" onClick={() => setActiveTab("requests")}>
+                  <Users className="w-4 h-4 ml-2" />
+                  عرض الطلبات الجديدة ({pendingRequests})
+                </Button>
+              )}
             </CardContent>
           </Card>
 
@@ -373,6 +450,44 @@ const OfficeDashboard = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="location" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                موقع المكتب الجغرافي
+              </CardTitle>
+              <CardDescription>
+                حدد موقع المكتب على الخريطة ليظهر للعملاء عند البحث عن مكاتب عقارية قريبة
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <LocationPicker
+                latitude={officeProfile.latitude ? Number(officeProfile.latitude) : undefined}
+                longitude={officeProfile.longitude ? Number(officeProfile.longitude) : undefined}
+                onLocationChange={(lat, lng) => {
+                  setOfficeProfile({ ...officeProfile, latitude: lat, longitude: lng });
+                }}
+                autoDetectLocation={!officeProfile.latitude}
+              />
+
+              <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 ml-2" />
+                    حفظ الموقع
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="properties" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold">إعلانات المكتب</h2>
@@ -443,7 +558,8 @@ const OfficeDashboard = () => {
                   price: p.price,
                   latitude: p.latitude!,
                   longitude: p.longitude!,
-                  type: "property"
+                  type: p.listing_type === 'rent' ? 'property_rent' : 'property',
+                  listingType: p.listing_type as 'sale' | 'rent'
                 }))}
                 onMarkerClick={(id) => navigate(`/property/${id}`)}
               />
@@ -451,45 +567,92 @@ const OfficeDashboard = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="requests">
+        <TabsContent value="requests" className="space-y-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>طلبات إدارة الأملاك</CardTitle>
-              <Button variant="outline" asChild>
-                <Link to="/dashboard/office/property-management">
-                  عرض جميع الطلبات
-                </Link>
-              </Button>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                طلبات إدارة الأملاك
+              </CardTitle>
+              <CardDescription>
+                طلبات العملاء لإدارة عقاراتهم من قبل المكتب
+              </CardDescription>
             </CardHeader>
-            <CardContent className="py-8 text-center">
-              <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">إدارة طلبات إدارة الأملاك الواردة</p>
-              <Button asChild>
-                <Link to="/dashboard/office/property-management">
-                  <FileText className="w-4 h-4 ml-2" />
-                  عرض الطلبات
-                </Link>
-              </Button>
+            <CardContent>
+              {requests.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">لا توجد طلبات حالياً</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {requests.map(request => (
+                    <Card key={request.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold">{request.requester_name}</h4>
+                              {getRequestStatusBadge(request.status)}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {request.property_type} - {request.property_address}
+                            </p>
+                            <p className="text-sm text-muted-foreground" dir="ltr">
+                              {request.requester_phone}
+                            </p>
+                            {request.notes && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                ملاحظات: {request.notes}
+                              </p>
+                            )}
+                          </div>
+                          {request.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleRequestStatus(request.id, 'accepted')}
+                              >
+                                <CheckCircle className="w-4 h-4 ml-1" />
+                                قبول
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleRequestStatus(request.id, 'rejected')}
+                              >
+                                <XCircle className="w-4 h-4 ml-1" />
+                                رفض
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="reports">
           <Card>
-            <CardContent className="py-12 text-center">
+            <CardContent className="p-8 text-center">
               <BarChart3 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">التقارير قريباً</p>
+              <p className="text-muted-foreground">قريباً - تقارير وإحصائيات المكتب</p>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="messages">
           <Card>
-            <CardContent className="py-12 text-center">
+            <CardContent className="p-8 text-center">
               <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">رسائلك</p>
               <Button asChild>
-                <Link to="/messages">عرض الرسائل</Link>
+                <Link to="/messages">
+                  عرض الرسائل
+                </Link>
               </Button>
             </CardContent>
           </Card>
