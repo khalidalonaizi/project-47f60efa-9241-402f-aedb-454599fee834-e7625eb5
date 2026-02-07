@@ -28,6 +28,10 @@ import Favorites from "./pages/Favorites";
 import MapSearchPage from "./pages/MapSearchPage";
 import NotFound from "./pages/NotFound";
 
+// New pages
+import Appraisers from "./pages/Appraisers";
+import AppraiserDetails from "./pages/AppraiserDetails";
+
 // Dashboard pages
 import UserDashboard from "./pages/dashboard/UserDashboard";
 import OfficeDashboard from "./pages/dashboard/OfficeDashboard";
@@ -113,6 +117,10 @@ const App = () => (
               <Route path="/brokerage-services" element={<BrokerageServices />} />
               <Route path="/transaction-guarantee" element={<TransactionGuarantee />} />
               <Route path="/explore-cities" element={<ExploreCities />} />
+              
+              {/* Appraisers Pages */}
+              <Route path="/appraisers" element={<Appraisers />} />
+              <Route path="/appraiser/:id" element={<AppraiserDetails />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

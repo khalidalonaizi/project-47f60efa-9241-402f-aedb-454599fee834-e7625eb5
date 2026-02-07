@@ -7,8 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { 
@@ -70,6 +68,58 @@ const financingIcon = L.divIcon({
   popupAnchor: [0, -32],
 });
 
+// Static financing offers for demo
+const staticOffers = [
+  {
+    id: "1",
+    company_name: "البنك الأهلي السعودي",
+    company_type: "bank",
+    interest_rate: 4.5,
+    max_tenure: 25,
+    max_amount: 5000000,
+    min_salary: 5000,
+    max_dti: 65,
+    features: ["تمويل يصل إلى 90%", "فترة سداد مرنة", "إعفاء من الرسوم الإدارية"],
+    website: "https://www.alahli.com",
+    description: "عرض تمويلي مميز من البنك الأهلي السعودي يتيح لك امتلاك منزل أحلامك بأقساط مريحة ونسبة ربح تنافسية.",
+    is_featured: true,
+    latitude: 24.7136,
+    longitude: 46.6753,
+  },
+  {
+    id: "2",
+    company_name: "مصرف الراجحي",
+    company_type: "bank",
+    interest_rate: 4.2,
+    max_tenure: 30,
+    max_amount: 7000000,
+    min_salary: 4000,
+    max_dti: 60,
+    features: ["متوافق مع الشريعة", "موافقة سريعة", "تأمين مجاني"],
+    website: "https://www.alrajhibank.com.sa",
+    description: "تمويل عقاري متوافق مع أحكام الشريعة الإسلامية من مصرف الراجحي.",
+    is_featured: true,
+    latitude: 24.6877,
+    longitude: 46.7219,
+  },
+  {
+    id: "3",
+    company_name: "بنك الرياض",
+    company_type: "bank",
+    interest_rate: 4.8,
+    max_tenure: 25,
+    max_amount: 4000000,
+    min_salary: 6000,
+    max_dti: 55,
+    features: ["أقساط ثابتة", "خدمة عملاء متميزة", "تحويل الراتب اختياري"],
+    website: "https://www.riyadbank.com",
+    description: "عرض تمويل عقاري من بنك الرياض بأقساط ثابتة طوال فترة التمويل.",
+    is_featured: false,
+    latitude: 24.7000,
+    longitude: 46.6900,
+  },
+];
+
 interface FinancingOffer {
   id: string;
   company_name: string;
@@ -99,7 +149,6 @@ const FinancingOfferPublicDetails = () => {
   const [offer, setOffer] = useState<FinancingOffer | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -108,7 +157,7 @@ const FinancingOfferPublicDetails = () => {
   const [propertyPrice, setPropertyPrice] = useState(1000000);
   const [downPayment, setDownPayment] = useState(200000);
   const [tenure, setTenure] = useState(20);
-  const [showCalculator, setShowCalculator] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -119,48 +168,60 @@ const FinancingOfferPublicDetails = () => {
   const fetchOffer = async () => {
     setLoading(true);
     try {
+      // First check static offers (for demo data)
+      const staticOffer = staticOffers.find(o => o.id === id);
+      if (staticOffer) {
+        setOffer(staticOffer);
+        setLoading(false);
+        return;
+      }
+
+      // Try to fetch from public view - this is accessible to everyone
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data, error } = await supabase
-        .from('financing_offers')
+        .from('financing_offers_public')
         .select('*')
         .eq('id', id)
         .eq('is_approved', true)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         setOffer({
-          id: data.id,
-          company_name: data.company_name,
-          company_type: data.company_type,
+          id: data.id!,
+          company_name: data.company_name!,
+          company_type: data.company_type!,
           logo_url: data.logo_url || undefined,
-          interest_rate: data.interest_rate,
-          max_tenure: data.max_tenure,
-          max_amount: data.max_amount,
-          min_salary: data.min_salary,
-          max_dti: data.max_dti,
+          interest_rate: data.interest_rate!,
+          max_tenure: data.max_tenure!,
+          max_amount: data.max_amount!,
+          min_salary: data.min_salary!,
+          max_dti: data.max_dti!,
           features: data.features || [],
-          phone: data.phone || undefined,
-          email: data.email || undefined,
           website: data.website || undefined,
           description: data.description || undefined,
           is_featured: data.is_featured || false,
-          latitude: data.latitude ? Number(data.latitude) : undefined,
-          longitude: data.longitude ? Number(data.longitude) : undefined,
         });
       } else {
         toast({
-          title: 'خطأ',
-          description: 'لم يتم العثور على العرض أو غير متاح',
-          variant: 'destructive',
+          title: 'تنبيه',
+          description: 'العرض غير متاح حالياً',
         });
         navigate('/financing');
       }
     } catch (error) {
       console.error('Error:', error);
-      toast({
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء جلب تفاصيل العرض',
-        variant: 'destructive',
-      });
+      // If error, check static offers again
+      const staticOffer = staticOffers.find(o => o.id === id);
+      if (staticOffer) {
+        setOffer(staticOffer);
+      } else {
+        toast({
+          title: 'خطأ',
+          description: 'حدث خطأ أثناء جلب تفاصيل العرض',
+          variant: 'destructive',
+        });
+        navigate('/financing');
+      }
     } finally {
       setLoading(false);
     }
@@ -252,7 +313,7 @@ const FinancingOfferPublicDetails = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">تفاصيل العرض التمويلي</h1>
-            <p className="text-muted-foreground">معلومات كاملة عن العرض</p>
+            <p className="text-muted-foreground">معلومات كاملة عن العرض - متاح للجميع</p>
           </div>
         </div>
 
@@ -458,94 +519,91 @@ const FinancingOfferPublicDetails = () => {
                     style={{ zIndex: 0 }}
                   />
                   {/* Legend */}
-                  <div className="mt-4 flex items-center gap-2 text-sm">
-                    <div className="w-4 h-4 rounded-full bg-destructive" />
-                    <span className="text-muted-foreground">موقع الجهة التمويلية</span>
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                    <p className="text-xs font-semibold mb-2">دليل الألوان</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+                      <span className="text-muted-foreground">موقع الجهة التمويلية</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             )}
           </div>
 
-          {/* Sidebar - Contact Info */}
-          <div className="space-y-4">
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Contact Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">معلومات التواصل</CardTitle>
+                <CardTitle>معلومات التواصل</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {user ? (
-                  <>
-                    {offer.phone && (
-                      <a 
-                        href={`tel:${offer.phone}`}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <Phone className="h-5 w-5 text-primary" />
-                        <span dir="ltr">{offer.phone}</span>
-                      </a>
-                    )}
-                    {offer.email && (
-                      <a 
-                        href={`mailto:${offer.email}`}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <Mail className="h-5 w-5 text-primary" />
-                        <span>{offer.email}</span>
-                      </a>
-                    )}
-                    {offer.website && (
-                      <a 
-                        href={offer.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <Globe className="h-5 w-5 text-primary" />
-                        <span className="text-primary hover:underline">زيارة الموقع</span>
-                      </a>
-                    )}
-                    {!offer.phone && !offer.email && !offer.website && (
-                      <p className="text-muted-foreground text-sm text-center py-4">
-                        لا توجد معلومات تواصل متاحة
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-muted-foreground mb-4">
-                      سجل دخولك لعرض معلومات التواصل
-                    </p>
-                    <Button onClick={() => navigate('/auth')} className="w-full">
-                      تسجيل الدخول
-                    </Button>
+              <CardContent className="space-y-4">
+                {offer.phone && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-muted rounded-lg">
+                      <Phone className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">الهاتف</p>
+                      <p className="font-medium" dir="ltr">{offer.phone}</p>
+                    </div>
                   </div>
+                )}
+                {offer.email && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-muted rounded-lg">
+                      <Mail className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
+                      <p className="font-medium">{offer.email}</p>
+                    </div>
+                  </div>
+                )}
+                {offer.website && (
+                  <Button variant="outline" className="w-full gap-2" asChild>
+                    <a href={offer.website} target="_blank" rel="noopener noreferrer">
+                      <Globe className="h-4 w-4" />
+                      زيارة الموقع الإلكتروني
+                    </a>
+                  </Button>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-3">
-                  <Calculator className="h-12 w-12 mx-auto text-primary" />
-                  <h3 className="font-semibold">هل تريد حساب أهليتك؟</h3>
-                  <p className="text-sm text-muted-foreground">
-                    استخدم حاسبة التمويل المتقدمة لمعرفة أهليتك
-                  </p>
-                  <Button 
-                    variant="default" 
-                    className="w-full"
-                    onClick={() => navigate('/financing')}
-                  >
-                    حاسبة التمويل المتقدمة
-                  </Button>
+            {/* Quick Facts */}
+            <Card>
+              <CardHeader>
+                <CardTitle>ملخص العرض</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">نسبة الربح</span>
+                  <span className="font-bold text-primary">{offer.interest_rate}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">أقصى مدة</span>
+                  <span className="font-bold">{offer.max_tenure} سنة</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">أقصى مبلغ</span>
+                  <span className="font-bold">{formatPrice(offer.max_amount)} ر.س</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">الحد الأدنى للراتب</span>
+                  <span className="font-bold">{formatPrice(offer.min_salary)} ر.س</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">نسبة الاستقطاع</span>
+                  <span className="font-bold">{offer.max_dti}%</span>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-
+      
       <Footer />
     </div>
   );
