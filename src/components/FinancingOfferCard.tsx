@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,8 @@ import {
   CheckCircle,
   Globe,
   Landmark,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Eye
 } from "lucide-react";
 
 // Public financing offer - without sensitive contact info (phone/email)
@@ -36,6 +38,7 @@ interface FinancingOfferCardProps {
 }
 
 const FinancingOfferCard = ({ offer, isCompatible = true, formatPrice }: FinancingOfferCardProps) => {
+  const navigate = useNavigate();
   const getCompanyTypeLabel = (type: string) => {
     switch (type) {
       case 'bank':
@@ -121,19 +124,20 @@ const FinancingOfferCard = ({ offer, isCompatible = true, formatPrice }: Financi
         )}
 
         <div className="flex gap-2 pt-2">
+          <Button 
+            className="flex-1" 
+            variant="default"
+            onClick={() => navigate(`/financing/${offer.id}`)}
+          >
+            <Eye className="w-4 h-4 ml-2" />
+            عرض التفاصيل
+          </Button>
           {offer.website && (
-            <a href={offer.website} target="_blank" rel="noopener noreferrer" className="flex-1">
-              <Button className="w-full" variant={isCompatible ? "default" : "outline"} disabled={!isCompatible}>
-                <Globe className="w-4 h-4 ml-2" />
-                زيارة الموقع
+            <a href={offer.website} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="icon">
+                <Globe className="w-4 h-4" />
               </Button>
             </a>
-          )}
-          {!offer.website && (
-            <Button className="flex-1" variant="outline" disabled>
-              <Globe className="w-4 h-4 ml-2" />
-              لا يوجد موقع
-            </Button>
           )}
         </div>
       </CardContent>
