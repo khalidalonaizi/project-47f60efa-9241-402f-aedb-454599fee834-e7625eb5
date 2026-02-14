@@ -156,11 +156,14 @@ const Auth = () => {
       let message = 'حدث خطأ أثناء تسجيل الدخول';
       if (error.message.includes('Invalid login credentials')) {
         message = 'بيانات الدخول غير صحيحة';
+      } else if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+        message = 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد للضغط على رابط التفعيل.';
       }
       toast({
         title: 'خطأ',
         description: message,
         variant: 'destructive',
+        duration: 8000,
       });
     } else {
       toast({
