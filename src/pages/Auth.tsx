@@ -76,11 +76,36 @@ const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
-  // Listen for PASSWORD_RECOVERY event from Supabase
+  // Listen for auth events (PASSWORD_RECOVERY, EMAIL_CONFIRMED)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsResetMode(true);
+      }
+      
+      // Handle email confirmation - send welcome email
+      if (event === 'SIGNED_IN' && session?.user) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const urlType = hashParams.get('type');
+        if (urlType === 'signup' || urlType === 'email') {
+          toast({
+            title: 'تم تفعيل حسابك بنجاح! 🎉',
+            description: 'مرحباً بك في عقار السعودية. يمكنك الآن استخدام جميع خدمات المنصة.',
+            duration: 8000,
+          });
+          
+          // Send welcome email
+          try {
+            await supabase.functions.invoke('send-welcome-email', {
+              body: {
+                email: session.user.email,
+                full_name: session.user.user_metadata?.full_name || '',
+              },
+            });
+          } catch (err) {
+            console.error('Failed to send welcome email:', err);
+          }
+        }
       }
     });
 
