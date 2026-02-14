@@ -46,6 +46,8 @@ const Header = () => {
         return "/dashboard/financing";
       case "appraiser":
         return "/dashboard/appraiser";
+      case "developer":
+        return "/dashboard/developer";
       default:
         return "/dashboard/user";
     }

@@ -37,6 +37,7 @@ import UserDashboard from "./pages/dashboard/UserDashboard";
 import OfficeDashboard from "./pages/dashboard/OfficeDashboard";
 import FinancingDashboard from "./pages/dashboard/FinancingDashboard";
 import AppraiserDashboard from "./pages/dashboard/AppraiserDashboard";
+import DeveloperDashboard from "./pages/dashboard/DeveloperDashboard";
 import PropertyManagementRequests from "./pages/dashboard/PropertyManagementRequests";
 
 // Other pages
@@ -55,7 +56,8 @@ import PropertyEvaluation from "./pages/PropertyEvaluation";
 import BrokerageServices from "./pages/BrokerageServices";
 import TransactionGuarantee from "./pages/TransactionGuarantee";
 import ExploreCities from "./pages/ExploreCities";
-
+import Developers from "./pages/Developers";
+import DeveloperDetails from "./pages/DeveloperDetails";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -87,7 +89,7 @@ const App = () => (
               <Route path="/dashboard/office/property-management" element={<PropertyManagementRequests />} />
               <Route path="/dashboard/financing" element={<FinancingDashboard />} />
               <Route path="/dashboard/appraiser" element={<AppraiserDashboard />} />
-              
+              <Route path="/dashboard/developer" element={<DeveloperDashboard />} />
               {/* Property Management Request */}
               <Route path="/property-management-request" element={<PropertyManagementRequest />} />
               
@@ -121,6 +123,10 @@ const App = () => (
               {/* Appraisers Pages */}
               <Route path="/appraisers" element={<Appraisers />} />
               <Route path="/appraiser/:id" element={<AppraiserDetails />} />
+              
+              {/* Developers Pages */}
+              <Route path="/developers" element={<Developers />} />
+              <Route path="/developer/:id" element={<DeveloperDetails />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

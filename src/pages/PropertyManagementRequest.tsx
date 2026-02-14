@@ -112,11 +112,8 @@ const PropertyManagementRequest = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
+  // Don't redirect - allow viewing map without login
+  // Login will be required only when submitting the form
 
   useEffect(() => {
     fetchOffices();
@@ -237,8 +234,12 @@ const PropertyManagementRequest = () => {
   };
 
   const handleSubmitRequest = async () => {
-    if (!user || !selectedOffice) return;
-
+    if (!user) {
+      toast({ title: 'يرجى تسجيل الدخول', description: 'سجل دخولك أولاً لإرسال الطلب', variant: 'destructive' });
+      navigate(`/auth?redirect=/property-management-request`);
+      return;
+    }
+    if (!selectedOffice) return;
     if (!requesterName.trim() || !requesterPhone.trim() || !propertyType || !propertyAddress.trim()) {
       toast({
         title: 'خطأ',

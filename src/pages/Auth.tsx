@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
-import { Building2, Mail, Lock, User, ArrowRight, CheckCircle, Briefcase, Landmark, ClipboardCheck } from 'lucide-react';
+import { Building2, Mail, Lock, User, ArrowRight, CheckCircle, Briefcase, Landmark, ClipboardCheck, HardHat } from 'lucide-react';
 
 const SITE_NAME = 'عقار السعودية';
 
@@ -20,6 +20,7 @@ const accountTypes = [
   { value: 'real_estate_office', label: 'مكتب عقاري', icon: Building2, description: 'لإدارة العقارات والمكتب' },
   { value: 'financing_provider', label: 'جهة تمويلية', icon: Landmark, description: 'لنشر عروض التمويل العقاري' },
   { value: 'appraiser', label: 'مقيم عقاري', icon: ClipboardCheck, description: 'لتقديم خدمات التقييم العقاري' },
+  { value: 'developer', label: 'مطوّر عقاري', icon: HardHat, description: 'لإدارة مشاريع التطوير العقاري' },
 ];
 
 const forgotPasswordSchema = z.object({
@@ -36,7 +37,7 @@ const signupSchema = z.object({
   email: z.string().trim().email({ message: 'البريد الإلكتروني غير صالح' }),
   password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
   confirmPassword: z.string(),
-  accountType: z.enum(['individual', 'real_estate_office', 'financing_provider', 'appraiser'], { 
+  accountType: z.enum(['individual', 'real_estate_office', 'financing_provider', 'appraiser', 'developer'], { 
     required_error: 'يرجى اختيار نوع الحساب' 
   }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -93,38 +94,15 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !isResetMode) {
-      // Redirect based on account type
-      redirectToDashboard(user.id);
+      // Redirect to homepage after login
+      const redirectTo = searchParams.get('redirect');
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else {
+        navigate('/');
+      }
     }
   }, [user, isResetMode]);
-
-  const redirectToDashboard = async (userId: string) => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('account_type')
-        .eq('user_id', userId)
-        .single();
-
-      const accountType = profile?.account_type || 'individual';
-      
-      switch (accountType) {
-        case 'real_estate_office':
-          navigate('/dashboard/office');
-          break;
-        case 'financing_provider':
-          navigate('/dashboard/financing');
-          break;
-        case 'appraiser':
-          navigate('/dashboard/appraiser');
-          break;
-        default:
-          navigate('/dashboard/user');
-      }
-    } catch (error) {
-      navigate('/');
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,9 +142,7 @@ const Auth = () => {
         title: 'مرحباً!',
         description: 'تم تسجيل الدخول بنجاح',
       });
-      if (data?.user) {
-        redirectToDashboard(data.user.id);
-      }
+      // useEffect will handle redirect to homepage
     }
   };
 
