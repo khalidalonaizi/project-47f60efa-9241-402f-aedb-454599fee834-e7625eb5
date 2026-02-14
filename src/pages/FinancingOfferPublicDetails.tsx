@@ -9,6 +9,8 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import FinancingRequestForm from '@/components/FinancingRequestForm';
+import MapLegend from '@/components/MapLegend';
 import { 
   ArrowRight,
   Landmark,
@@ -85,6 +87,7 @@ const staticOffers = [
     is_featured: true,
     latitude: 24.7136,
     longitude: 46.6753,
+    user_id: "static-1",
   },
   {
     id: "2",
@@ -101,6 +104,7 @@ const staticOffers = [
     is_featured: true,
     latitude: 24.6877,
     longitude: 46.7219,
+    user_id: "static-2",
   },
   {
     id: "3",
@@ -117,6 +121,7 @@ const staticOffers = [
     is_featured: false,
     latitude: 24.7000,
     longitude: 46.6900,
+    user_id: "static-3",
   },
 ];
 
@@ -138,6 +143,7 @@ interface FinancingOffer {
   is_featured: boolean;
   latitude?: number;
   longitude?: number;
+  user_id?: string;
 }
 
 const formatPrice = (price: number) => {
@@ -200,6 +206,7 @@ const FinancingOfferPublicDetails = () => {
           website: data.website || undefined,
           description: data.description || undefined,
           is_featured: data.is_featured || false,
+          user_id: data.user_id || undefined,
         });
       } else {
         toast({
@@ -503,6 +510,13 @@ const FinancingOfferPublicDetails = () => {
               )}
             </Card>
 
+            {/* Financing Request Form */}
+            <FinancingRequestForm
+              offerId={offer.id}
+              providerId={offer.user_id || ''}
+              companyName={offer.company_name}
+            />
+
             {/* Location Map */}
             {offer.latitude && offer.longitude && (
               <Card>
@@ -518,14 +532,7 @@ const FinancingOfferPublicDetails = () => {
                     className="h-[300px] rounded-lg overflow-hidden"
                     style={{ zIndex: 0 }}
                   />
-                  {/* Legend */}
-                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                    <p className="text-xs font-semibold mb-2">دليل الألوان</p>
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#ef4444' }} />
-                      <span className="text-muted-foreground">موقع الجهة التمويلية</span>
-                    </div>
-                  </div>
+                  <MapLegend items={[{ color: '#ef4444', label: 'موقع الجهة التمويلية' }]} className="mt-4" />
                 </CardContent>
               </Card>
             )}

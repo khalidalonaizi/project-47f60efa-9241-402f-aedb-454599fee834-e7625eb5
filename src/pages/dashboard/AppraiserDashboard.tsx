@@ -9,6 +9,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PropertyMapView from "@/components/dashboard/PropertyMapView";
 import {
@@ -25,8 +26,10 @@ import {
   XCircle,
   Eye,
   Save,
-  Upload
+  Upload,
+  Camera
 } from "lucide-react";
+import ImageUploadWithCamera from "@/components/ImageUploadWithCamera";
 import { toast } from "@/hooks/use-toast";
 
 interface AppraisalRequest {
@@ -62,6 +65,14 @@ const AppraiserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [saving, setSaving] = useState(false);
+  const [evaluatingRequest, setEvaluatingRequest] = useState<string | null>(null);
+  const [evalForm, setEvalForm] = useState({
+    estimated_value: '',
+    visit_notes: '',
+    property_condition: '',
+    property_age: '',
+    images: [] as string[],
+  });
   
   // Profile state
   const [profile, setProfile] = useState<AppraiserProfile>({
@@ -124,6 +135,42 @@ const AppraiserDashboard = () => {
       toast({ title: "خطأ", description: "تعذر تحديث الحالة", variant: "destructive" });
     } else {
       toast({ title: "تم التحديث", description: "تم تحديث حالة الطلب بنجاح" });
+      fetchData();
+    }
+  };
+
+  const handleSubmitEvaluation = async (requestId: string) => {
+    if (!evalForm.estimated_value) {
+      toast({ title: "خطأ", description: "يرجى إدخال القيمة التقديرية", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("appraisal_requests")
+      .update({
+        status: "completed",
+        estimated_value: parseFloat(evalForm.estimated_value),
+        visit_notes: `حالة العقار: ${evalForm.property_condition}\nعمر العقار: ${evalForm.property_age} سنة\n\n${evalForm.visit_notes}`,
+        images: evalForm.images.length > 0 ? evalForm.images : undefined,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", requestId);
+    setSaving(false);
+    if (error) {
+      toast({ title: "خطأ", description: "تعذر إرسال التقييم", variant: "destructive" });
+    } else {
+      const request = requests.find(r => r.id === requestId);
+      if (request) {
+        await supabase.from("notifications").insert({
+          user_id: request.user_id,
+          type: "appraisal_completed",
+          title: "تم اكتمال تقييم عقارك! 📋",
+          message: `تم إكمال تقييم عقارك في ${request.property_address}. القيمة التقديرية: ${new Intl.NumberFormat("ar-SA").format(parseFloat(evalForm.estimated_value))} ر.س`,
+        });
+      }
+      toast({ title: "تم الإرسال! ✅", description: "تم إرسال التقييم للعميل بنجاح" });
+      setEvaluatingRequest(null);
+      setEvalForm({ estimated_value: '', visit_notes: '', property_condition: '', property_age: '', images: [] });
       fetchData();
     }
   };
@@ -290,11 +337,11 @@ const AppraiserDashboard = () => {
                     {getStatusBadge(request.status)}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-4">
-                    {request.status === "new" && (
+                    {(!request.status || request.status === "new" || request.status === "pending") && (
                       <>
                         <Button size="sm" onClick={() => handleUpdateRequestStatus(request.id, "scheduled")}>
                           <Calendar className="w-4 h-4 ml-1" />
-                          تحديد موعد زيارة
+                          قبول وتحديد موعد
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => handleUpdateRequestStatus(request.id, "rejected")}>
                           <XCircle className="w-4 h-4 ml-1" />
@@ -303,18 +350,70 @@ const AppraiserDashboard = () => {
                       </>
                     )}
                     {request.status === "scheduled" && (
-                      <Button size="sm" onClick={() => handleUpdateRequestStatus(request.id, "in_progress")}>
-                        <CheckCircle className="w-4 h-4 ml-1" />
-                        بدء التقييم
+                      <Button size="sm" onClick={() => {
+                        setEvaluatingRequest(request.id);
+                        setActiveTab("requests");
+                      }}>
+                        <ClipboardCheck className="w-4 h-4 ml-1" />
+                        فتح نموذج التقييم
                       </Button>
                     )}
                     {request.status === "in_progress" && (
-                      <Button size="sm" onClick={() => handleUpdateRequestStatus(request.id, "completed")}>
-                        <Upload className="w-4 h-4 ml-1" />
-                        رفع التقرير
+                      <Button size="sm" onClick={() => {
+                        setEvaluatingRequest(request.id);
+                      }}>
+                        <ClipboardCheck className="w-4 h-4 ml-1" />
+                        إكمال التقييم
                       </Button>
                     )}
                   </div>
+
+                  {/* Evaluation Form */}
+                  {evaluatingRequest === request.id && (
+                    <div className="mt-4 p-4 border rounded-lg bg-muted/30 space-y-4">
+                      <h4 className="font-bold flex items-center gap-2">
+                        <ClipboardCheck className="w-5 h-5 text-primary" />
+                        نموذج التقييم العقاري
+                      </h4>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>حالة العقار</Label>
+                          <Select value={evalForm.property_condition} onValueChange={(v) => setEvalForm({...evalForm, property_condition: v})}>
+                            <SelectTrigger><SelectValue placeholder="اختر حالة العقار" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ممتاز">ممتاز</SelectItem>
+                              <SelectItem value="جيد جداً">جيد جداً</SelectItem>
+                              <SelectItem value="جيد">جيد</SelectItem>
+                              <SelectItem value="متوسط">متوسط</SelectItem>
+                              <SelectItem value="يحتاج صيانة">يحتاج صيانة</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>عمر العقار (سنة)</Label>
+                          <Input type="number" value={evalForm.property_age} onChange={(e) => setEvalForm({...evalForm, property_age: e.target.value})} placeholder="مثال: 5" />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label>القيمة التقديرية (ر.س) *</Label>
+                          <Input type="number" value={evalForm.estimated_value} onChange={(e) => setEvalForm({...evalForm, estimated_value: e.target.value})} placeholder="القيمة التقديرية النهائية" />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label>الملاحظات الفنية</Label>
+                          <Textarea value={evalForm.visit_notes} onChange={(e) => setEvalForm({...evalForm, visit_notes: e.target.value})} placeholder="ملاحظات فنية حول العقار..." rows={4} />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label>صور العقار</Label>
+                          <ImageUploadWithCamera userId={user?.id || ''} onImagesChange={(imgs) => setEvalForm({...evalForm, images: imgs})} />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={() => handleSubmitEvaluation(request.id)} disabled={saving}>
+                          {saving ? <><Loader2 className="w-4 h-4 ml-1 animate-spin" />جاري الإرسال...</> : <><Save className="w-4 h-4 ml-1" />إرسال التقييم للعميل</>}
+                        </Button>
+                        <Button variant="outline" onClick={() => setEvaluatingRequest(null)}>إلغاء</Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
