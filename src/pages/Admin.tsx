@@ -70,6 +70,14 @@ interface UserProfile {
   full_name: string | null;
   phone: string | null;
   created_at: string;
+  account_type: string | null;
+  company_name: string | null;
+  company_logo: string | null;
+  license_number: string | null;
+  commercial_registration: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  years_of_experience: number | null;
   propertiesCount?: number;
 }
 
@@ -420,9 +428,20 @@ const Admin = () => {
   };
 
   const exportUsersToExcel = () => {
+    const accountTypeLabels: Record<string, string> = {
+      individual: 'فردي',
+      real_estate_office: 'مكتب عقاري',
+      financing_provider: 'جهة تمويلية',
+      appraiser: 'مقيم عقاري',
+      developer: 'مطوّر عقاري',
+    };
     const data = filteredUsers.map(u => ({
       'الاسم': u.full_name || 'بدون اسم',
       'رقم الهاتف': u.phone || 'بدون رقم',
+      'نوع الحساب': accountTypeLabels[u.account_type || 'individual'] || u.account_type,
+      'اسم الشركة': u.company_name || '-',
+      'رقم الترخيص': u.license_number || '-',
+      'السجل التجاري': u.commercial_registration || '-',
       'عدد الإعلانات': u.propertiesCount || 0,
       'تاريخ التسجيل': new Date(u.created_at).toLocaleDateString('ar-SA'),
     }));
@@ -1089,33 +1108,78 @@ const Admin = () => {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredUsers.map((userProfile) => (
-                  <Card key={userProfile.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                          <Users className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold truncate">{userProfile.full_name || 'بدون اسم'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {userProfile.phone || 'بدون رقم'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="secondary">
-                              <Building2 className="w-3 h-3 ml-1" />
-                              {userProfile.propertiesCount} إعلان
-                            </Badge>
+                {filteredUsers.map((userProfile) => {
+                  const accountTypeLabels: Record<string, string> = {
+                    individual: 'فردي',
+                    real_estate_office: 'مكتب عقاري',
+                    financing_provider: 'جهة تمويلية',
+                    appraiser: 'مقيم عقاري',
+                    developer: 'مطوّر عقاري',
+                  };
+                  const accountTypeColors: Record<string, string> = {
+                    individual: 'bg-blue-100 text-blue-800',
+                    real_estate_office: 'bg-purple-100 text-purple-800',
+                    financing_provider: 'bg-emerald-100 text-emerald-800',
+                    appraiser: 'bg-amber-100 text-amber-800',
+                    developer: 'bg-rose-100 text-rose-800',
+                  };
+                  const accountType = userProfile.account_type || 'individual';
+                  
+                  return (
+                    <Card key={userProfile.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-primary/10">
+                            {userProfile.avatar_url ? (
+                              <img src={userProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Users className="w-6 h-6 text-primary" />
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            انضم في: {new Date(userProfile.created_at).toLocaleDateString('ar-SA')}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold truncate">{userProfile.full_name || 'بدون اسم'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {userProfile.phone || 'بدون رقم'}
+                            </p>
+                            
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${accountTypeColors[accountType] || 'bg-muted text-muted-foreground'}`}>
+                                {accountTypeLabels[accountType] || accountType}
+                              </span>
+                              <Badge variant="secondary">
+                                <Building2 className="w-3 h-3 ml-1" />
+                                {userProfile.propertiesCount} إعلان
+                              </Badge>
+                            </div>
+
+                            {/* تفاصيل إضافية حسب نوع الحساب */}
+                            {accountType !== 'individual' && (
+                              <div className="mt-3 space-y-1 text-xs text-muted-foreground border-t pt-2">
+                                {userProfile.company_name && (
+                                  <p><span className="font-medium text-foreground">اسم الشركة:</span> {userProfile.company_name}</p>
+                                )}
+                                {userProfile.license_number && (
+                                  <p><span className="font-medium text-foreground">رقم الترخيص:</span> {userProfile.license_number}</p>
+                                )}
+                                {userProfile.commercial_registration && (
+                                  <p><span className="font-medium text-foreground">السجل التجاري:</span> {userProfile.commercial_registration}</p>
+                                )}
+                                {userProfile.years_of_experience && (
+                                  <p><span className="font-medium text-foreground">سنوات الخبرة:</span> {userProfile.years_of_experience}</p>
+                                )}
+                              </div>
+                            )}
+
+                            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              انضم في: {new Date(userProfile.created_at).toLocaleDateString('ar-SA')}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
