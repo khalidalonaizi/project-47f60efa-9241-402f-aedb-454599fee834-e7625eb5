@@ -57,14 +57,32 @@ interface FinancingOffer {
   created_at: string;
 }
 
+interface FinancingRequest {
+  id: string;
+  full_name: string;
+  phone: string;
+  monthly_income: number;
+  property_type: string;
+  property_price: number;
+  notes: string | null;
+  status: string;
+  provider_response: string | null;
+  created_at: string;
+  user_id: string;
+  offer_id: string;
+}
+
 const FinancingDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [offers, setOffers] = useState<FinancingOffer[]>([]);
+  const [requests, setRequests] = useState<FinancingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState('');
   
   // New offer form state
   const [newOffer, setNewOffer] = useState({
@@ -101,17 +119,23 @@ const FinancingDashboard = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("financing_offers")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+      const [offersRes, requestsRes] = await Promise.all([
+        supabase
+          .from("financing_offers")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("financing_requests")
+          .select("*")
+          .eq("provider_id", user.id)
+          .order("created_at", { ascending: false }),
+      ]);
 
-      if (!error) {
-        setOffers(data || []);
-      }
+      if (!offersRes.error) setOffers(offersRes.data || []);
+      if (!requestsRes.error) setRequests(requestsRes.data || []);
     } catch (error) {
-      console.error("Error fetching offers:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -192,6 +216,25 @@ const FinancingDashboard = () => {
     }
   };
 
+  const handleRequestAction = async (requestId: string, status: string, response?: string) => {
+    const updateData: any = { status, updated_at: new Date().toISOString() };
+    if (response) updateData.provider_response = response;
+    
+    const { error } = await supabase
+      .from("financing_requests")
+      .update(updateData)
+      .eq("id", requestId);
+
+    if (error) {
+      toast({ title: "خطأ", description: "تعذر تحديث الطلب", variant: "destructive" });
+    } else {
+      toast({ title: "تم التحديث", description: "تم تحديث حالة الطلب" });
+      setRespondingTo(null);
+      setResponseText('');
+      fetchOffers();
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
@@ -263,7 +306,7 @@ const FinancingDashboard = () => {
             <Card>
               <CardContent className="p-4 text-center">
                 <Users className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{requests.length}</p>
                 <p className="text-sm text-muted-foreground">طلبات التمويل</p>
               </CardContent>
             </Card>
@@ -535,13 +578,77 @@ const FinancingDashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="requests">
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">لا توجد طلبات تمويل حالياً</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="requests" className="space-y-6">
+          <h2 className="text-xl font-bold">طلبات التمويل الواردة</h2>
+          <div className="grid gap-4">
+            {requests.map((req) => (
+              <Card key={req.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{req.full_name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        📱 {req.phone} | 💰 الدخل: {formatPrice(req.monthly_income)} ر.س
+                      </p>
+                      <p className="text-sm mt-1">
+                        🏠 {req.property_type} | سعر العقار: {formatPrice(req.property_price)} ر.س
+                      </p>
+                      {req.notes && (
+                        <p className="text-sm text-muted-foreground mt-2 bg-muted/50 p-2 rounded">
+                          📝 {req.notes}
+                        </p>
+                      )}
+                      {req.provider_response && (
+                        <p className="text-sm mt-2 bg-primary/10 p-2 rounded">
+                          ✅ ردك: {req.provider_response}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {new Date(req.created_at).toLocaleDateString("ar-SA")}
+                      </p>
+                    </div>
+                    <Badge variant={req.status === 'approved' ? 'default' : req.status === 'rejected' ? 'destructive' : 'secondary'}>
+                      {req.status === 'approved' ? 'مقبول' : req.status === 'rejected' ? 'مرفوض' : 'جديد'}
+                    </Badge>
+                  </div>
+                  {req.status === 'pending' && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <Button size="sm" onClick={() => handleRequestAction(req.id, 'approved')}>
+                        ✅ قبول
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleRequestAction(req.id, 'rejected')}>
+                        ❌ رفض
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setRespondingTo(respondingTo === req.id ? null : req.id)}>
+                        💬 إرسال رد
+                      </Button>
+                    </div>
+                  )}
+                  {respondingTo === req.id && (
+                    <div className="mt-3 flex gap-2">
+                      <Input
+                        value={responseText}
+                        onChange={(e) => setResponseText(e.target.value)}
+                        placeholder="اكتب ردك هنا..."
+                        className="flex-1"
+                      />
+                      <Button size="sm" onClick={() => handleRequestAction(req.id, req.status, responseText)}>
+                        إرسال
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+            {requests.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">لا توجد طلبات تمويل واردة حالياً</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="clients">

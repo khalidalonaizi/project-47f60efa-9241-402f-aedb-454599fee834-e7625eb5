@@ -304,15 +304,27 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
             />
 
             {/* Legend */}
-            <div className="absolute top-4 right-4 bg-card rounded-lg shadow-lg p-3 z-[1000]">
-              <p className="text-sm font-bold mb-2">دليل الألوان</p>
-              <div className="flex items-center gap-2 text-sm mb-1">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span>للبيع</span>
+            <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg shadow-lg p-3 z-[1000]">
+              <p className="text-xs font-bold mb-2">دليل الألوان</p>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#22c55e' }}></div>
+                <span className="text-muted-foreground">عقارات للبيع</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span>للإيجار</span>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#3b82f6' }}></div>
+                <span className="text-muted-foreground">عقارات للإيجار</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#ef4444' }}></div>
+                <span className="text-muted-foreground">عروض التمويل</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#eab308' }}></div>
+                <span className="text-muted-foreground">طلبات التقييم</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#c0c0c0' }}></div>
+                <span className="text-muted-foreground">مكاتب عقارية</span>
               </div>
             </div>
 
