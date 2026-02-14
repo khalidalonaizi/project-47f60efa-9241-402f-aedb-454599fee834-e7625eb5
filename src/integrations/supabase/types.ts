@@ -119,6 +119,146 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_project_phases: {
+        Row: {
+          completion_percentage: number | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          images: string[] | null
+          project_id: string
+          sort_order: number | null
+          start_date: string | null
+          title: string
+          videos: string[] | null
+        }
+        Insert: {
+          completion_percentage?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          images?: string[] | null
+          project_id: string
+          sort_order?: number | null
+          start_date?: string | null
+          title: string
+          videos?: string[] | null
+        }
+        Update: {
+          completion_percentage?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          images?: string[] | null
+          project_id?: string
+          sort_order?: number | null
+          start_date?: string | null
+          title?: string
+          videos?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_project_phases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "developer_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      developer_projects: {
+        Row: {
+          address: string | null
+          amenities: string[] | null
+          area_from: number | null
+          area_to: number | null
+          available_units: number | null
+          city: string | null
+          completion_percentage: number | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          latitude: number | null
+          longitude: number | null
+          plans: string[] | null
+          price_from: number | null
+          price_to: number | null
+          project_type: string
+          status: string
+          title: string
+          total_units: number | null
+          updated_at: string
+          user_id: string
+          videos: string[] | null
+          vision_experience: string | null
+          vision_innovation: string | null
+          vision_quality: string | null
+          vision_sustainability: string | null
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[] | null
+          area_from?: number | null
+          area_to?: number | null
+          available_units?: number | null
+          city?: string | null
+          completion_percentage?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          plans?: string[] | null
+          price_from?: number | null
+          price_to?: number | null
+          project_type?: string
+          status?: string
+          title: string
+          total_units?: number | null
+          updated_at?: string
+          user_id: string
+          videos?: string[] | null
+          vision_experience?: string | null
+          vision_innovation?: string | null
+          vision_quality?: string | null
+          vision_sustainability?: string | null
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[] | null
+          area_from?: number | null
+          area_to?: number | null
+          available_units?: number | null
+          city?: string | null
+          completion_percentage?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          plans?: string[] | null
+          price_from?: number | null
+          price_to?: number | null
+          project_type?: string
+          status?: string
+          title?: string
+          total_units?: number | null
+          updated_at?: string
+          user_id?: string
+          videos?: string[] | null
+          vision_experience?: string | null
+          vision_innovation?: string | null
+          vision_quality?: string | null
+          vision_sustainability?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -226,6 +366,78 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      financing_requests: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          monthly_income: number
+          notes: string | null
+          offer_id: string
+          phone: string
+          property_latitude: number | null
+          property_longitude: number | null
+          property_price: number
+          property_type: string
+          provider_id: string
+          provider_response: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          monthly_income: number
+          notes?: string | null
+          offer_id: string
+          phone: string
+          property_latitude?: number | null
+          property_longitude?: number | null
+          property_price: number
+          property_type: string
+          provider_id: string
+          provider_response?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          monthly_income?: number
+          notes?: string | null
+          offer_id?: string
+          phone?: string
+          property_latitude?: number | null
+          property_longitude?: number | null
+          property_price?: number
+          property_type?: string
+          provider_id?: string
+          provider_response?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_requests_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "financing_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financing_requests_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "financing_offers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -893,6 +1105,7 @@ export type Database = {
         | "real_estate_office"
         | "financing_provider"
         | "appraiser"
+        | "developer"
       app_role: "admin" | "user"
     }
     CompositeTypes: {
@@ -1026,6 +1239,7 @@ export const Constants = {
         "real_estate_office",
         "financing_provider",
         "appraiser",
+        "developer",
       ],
       app_role: ["admin", "user"],
     },
