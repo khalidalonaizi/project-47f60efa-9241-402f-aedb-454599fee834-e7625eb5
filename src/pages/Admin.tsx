@@ -28,7 +28,8 @@ import {
   Filter,
   Download,
   FileSpreadsheet,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Monitor
 } from 'lucide-react';
 import {
   Select,
@@ -43,6 +44,7 @@ import * as XLSX from 'xlsx';
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import AdminAdvertisements from '@/components/AdminAdvertisements';
+import AdminAdMob from '@/components/AdminAdMob';
 
 interface Property {
   id: string;
@@ -86,7 +88,7 @@ const Admin = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'users' | 'advertisements'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'users' | 'advertisements' | 'admob'>('overview');
   const { toast } = useToast();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -525,6 +527,14 @@ const Admin = () => {
                 <ImageIcon className="h-4 w-4 text-purple-500" />
                 إدارة الإعلانات
               </Button>
+              <Button 
+                variant={activeTab === 'admob' ? 'secondary' : 'ghost'} 
+                className="w-full justify-start gap-2"
+                onClick={() => setActiveTab('admob')}
+              >
+                <Monitor className="h-4 w-4 text-green-500" />
+                إعلانات AdMob
+              </Button>
               <Link to="/admin/featured">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Star className="h-4 w-4 text-yellow-500" />
@@ -576,6 +586,14 @@ const Admin = () => {
             >
               <ImageIcon className="h-4 w-4 ml-1" />
               إدارة الإعلانات
+            </Button>
+            <Button 
+              variant={activeTab === 'admob' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setActiveTab('admob')}
+            >
+              <Monitor className="h-4 w-4 ml-1" />
+              AdMob
             </Button>
             <Link to="/admin/financing-offers">
               <Button variant="outline" size="sm" className="border-emerald-500 text-emerald-600">
@@ -1105,6 +1123,10 @@ const Admin = () => {
           {/* Advertisements Tab */}
           {activeTab === 'advertisements' && (
             <AdminAdvertisements />
+          )}
+          {/* AdMob Tab */}
+          {activeTab === 'admob' && (
+            <AdminAdMob />
           )}
         </main>
       </div>
