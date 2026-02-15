@@ -11,10 +11,10 @@ interface MapLegendProps {
 const defaultItems: LegendItem[] = [
   { color: '#22c55e', label: 'عقارات للبيع' },
   { color: '#3b82f6', label: 'عقارات للإيجار' },
-  { color: '#ef4444', label: 'عروض التمويل' },
-  { color: '#eab308', label: 'طلبات التقييم' },
+  { color: '#ef4444', label: 'جهات تمويلية' },
+  { color: '#eab308', label: 'مقيمون عقاريون' },
   { color: '#c0c0c0', label: 'مكاتب عقارية' },
-  { color: '#8b5cf6', label: 'موقعك الحالي' },
+  { color: '#8b5cf6', label: 'مشاريع تطوير' },
 ];
 
 const MapLegend = ({ items = defaultItems, className = '' }: MapLegendProps) => {

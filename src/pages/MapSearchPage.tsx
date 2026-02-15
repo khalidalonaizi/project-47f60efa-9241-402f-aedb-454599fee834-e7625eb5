@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Home, Loader2, X, Building2, Eye, Filter, ArrowRight, ChevronLeft } from "lucide-react";
+import { MapPin, Home, Loader2, X, Building2, Eye, Filter, ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import MapLegend from "@/components/MapLegend";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -24,6 +25,24 @@ interface Property {
   latitude: number | null;
   longitude: number | null;
   property_type: string;
+}
+
+interface ProfessionalMarker {
+  id: string;
+  name: string;
+  type: 'office' | 'appraiser' | 'financing';
+  latitude: number;
+  longitude: number;
+}
+
+interface DeveloperProject {
+  id: string;
+  title: string;
+  city: string | null;
+  latitude: number;
+  longitude: number;
+  status: string;
+  price_from: number | null;
 }
 
 // Fix for default marker icons in Leaflet
@@ -61,8 +80,11 @@ const MapSearchPage = () => {
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const [mapReady, setMapReady] = useState(false);
+  const initialBoundsFitted = useRef(false);
   
   const [properties, setProperties] = useState<Property[]>([]);
+  const [professionals, setProfessionals] = useState<ProfessionalMarker[]>([]);
+  const [devProjects, setDevProjects] = useState<DeveloperProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedCity, setSelectedCity] = useState("all");
@@ -73,93 +95,108 @@ const MapSearchPage = () => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
 
-  // Create custom icons with consistent platform colors
   const createIcon = (type: string) => {
-    // Green for sale, Blue for rent - consistent across all maps
-    const color = type === 'sale' ? '#22c55e' : '#3b82f6';
+    const colorMap: Record<string, string> = {
+      sale: '#22c55e',
+      rent: '#3b82f6',
+      office: '#c0c0c0',
+      appraiser: '#eab308',
+      financing: '#ef4444',
+      developer: '#8b5cf6',
+    };
+    const color = colorMap[type] || '#22c55e';
     return L.divIcon({
       className: 'custom-marker',
       html: `<div style="
-        width: 32px;
-        height: 32px;
-        background: ${color};
+        background-color: ${color};
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
         border: 3px solid white;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <div style="
-          width: 10px;
-          height: 10px;
-          background: white;
-          border-radius: 50%;
-          transform: rotate(45deg);
-        "></div>
-      </div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 32],
-      popupAnchor: [0, -32],
+      "></div>`,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
     });
   };
 
-  // Fetch properties with coordinates
+  // Fetch all data
   useEffect(() => {
-    const fetchProperties = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        .limit(200);
+    const fetchData = async () => {
+      const [propertiesRes, professionalsRes, devProjectsRes] = await Promise.all([
+        supabase
+          .from('properties')
+          .select('*')
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null)
+          .limit(200),
+        supabase
+          .from('profiles')
+          .select('user_id, full_name, company_name, account_type, latitude, longitude')
+          .in('account_type', ['real_estate_office', 'appraiser', 'financing_provider'])
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null),
+        supabase
+          .from('developer_projects')
+          .select('id, title, city, latitude, longitude, status, price_from')
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null),
+      ]);
 
-      if (!error && data) {
-        setProperties(data);
+      if (!propertiesRes.error && propertiesRes.data) {
+        setProperties(propertiesRes.data);
+      }
+      if (!professionalsRes.error && professionalsRes.data) {
+        setProfessionals(
+          professionalsRes.data.map((p) => ({
+            id: p.user_id,
+            name: p.company_name || p.full_name || '',
+            type: p.account_type === 'real_estate_office' ? 'office' as const
+              : p.account_type === 'financing_provider' ? 'financing' as const
+              : 'appraiser' as const,
+            latitude: Number(p.latitude),
+            longitude: Number(p.longitude),
+          }))
+        );
+      }
+      if (!devProjectsRes.error && devProjectsRes.data) {
+        setDevProjects(
+          devProjectsRes.data.map((d) => ({
+            ...d,
+            latitude: Number(d.latitude),
+            longitude: Number(d.longitude),
+          }))
+        );
       }
       setLoading(false);
     };
-    fetchProperties();
+    fetchData();
   }, []);
 
-  // Filter properties based on selections
-  const filteredProperties = properties.filter(property => {
+  const filteredProperties = useMemo(() => properties.filter(property => {
     if (selectedCity !== "all" && property.city !== selectedCity) return false;
     if (selectedType !== "all" && property.property_type !== selectedType) return false;
     if (selectedListing !== "all" && property.listing_type !== selectedListing) return false;
     return true;
-  });
+  }), [properties, selectedCity, selectedType, selectedListing]);
 
-  // Initialize map after loading is complete
+  // Initialize map
   useEffect(() => {
-    if (loading) return;
-    if (!mapContainerRef.current) return;
-    if (mapInstance.current) return;
+    if (loading || !mapContainerRef.current || mapInstance.current) return;
 
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       if (!mapContainerRef.current) return;
-      
       try {
-        // Initialize the map centered on Saudi Arabia
         mapInstance.current = L.map(mapContainerRef.current, {
           center: [24.7136, 46.6753],
           zoom: 6,
           zoomControl: true,
         });
-
-        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 19,
         }).addTo(mapInstance.current);
-
-        // Force a resize after initialization
-        setTimeout(() => {
-          mapInstance.current?.invalidateSize();
-        }, 100);
-
+        setTimeout(() => mapInstance.current?.invalidateSize(), 100);
         setMapReady(true);
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -176,23 +213,21 @@ const MapSearchPage = () => {
     };
   }, [loading]);
 
-  // Add markers when map is ready and properties change
+  // Add markers
   useEffect(() => {
     if (!mapReady || !mapInstance.current) return;
 
-    // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Add markers for each filtered property
+    const allBounds: [number, number][] = [];
+
     filteredProperties.forEach(property => {
       if (!property.latitude || !property.longitude) return;
-
       const marker = L.marker([property.latitude, property.longitude], {
         icon: createIcon(property.listing_type),
       }).addTo(mapInstance.current!);
 
-      // Create popup content
       const popupContent = `
         <div style="direction: rtl; min-width: 200px; text-align: right; padding: 8px;">
           <h3 style="margin: 0 0 8px; font-weight: bold; font-size: 14px;">${property.title}</h3>
@@ -200,36 +235,73 @@ const MapSearchPage = () => {
             ${formatPrice(property.price)} ر.س
             ${property.listing_type === 'rent' ? '<span style="font-size: 12px; font-weight: normal;">/ شهري</span>' : ''}
           </p>
-          <p style="margin: 0 0 8px; color: #666; font-size: 12px;">
+          <p style="margin: 0; color: #666; font-size: 12px;">
             ${property.city} ${property.neighborhood ? '- ' + property.neighborhood : ''}
           </p>
-          <div style="display: flex; gap: 12px; color: #888; font-size: 11px;">
-            ${property.bedrooms ? `<span>${property.bedrooms} غرف</span>` : ''}
-            ${property.bathrooms ? `<span>${property.bathrooms} حمام</span>` : ''}
-            ${property.area ? `<span>${property.area} م²</span>` : ''}
-          </div>
         </div>
       `;
-
       marker.bindPopup(popupContent);
-
-      marker.on('click', () => {
-        setSelectedProperty(property);
-      });
-
+      marker.on('click', () => setSelectedProperty(property));
       markersRef.current.push(marker);
+      allBounds.push([property.latitude, property.longitude]);
     });
 
-    // Fit bounds to show all markers
-    if (filteredProperties.length > 0) {
-      const bounds = L.latLngBounds(
-        filteredProperties
-          .filter(p => p.latitude && p.longitude)
-          .map(p => [p.latitude!, p.longitude!] as [number, number])
-      );
+    // Professional markers
+    professionals.forEach(prof => {
+      const marker = L.marker([prof.latitude, prof.longitude], {
+        icon: createIcon(prof.type),
+      }).addTo(mapInstance.current!);
+      const typeLabels: Record<string, string> = {
+        office: 'مكتب عقاري',
+        appraiser: 'مقيم عقاري',
+        financing: 'جهة تمويلية',
+      };
+      marker.bindPopup(`
+        <div style="direction: rtl; min-width: 150px; text-align: right;">
+          <h3 style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">${prof.name}</h3>
+          <p style="margin: 0; color: #666; font-size: 12px;">${typeLabels[prof.type] || ''}</p>
+        </div>
+      `);
+      markersRef.current.push(marker);
+      allBounds.push([prof.latitude, prof.longitude]);
+    });
+
+    // Developer project markers
+    devProjects.forEach(proj => {
+      const marker = L.marker([proj.latitude, proj.longitude], {
+        icon: createIcon('developer'),
+      }).addTo(mapInstance.current!);
+      marker.bindPopup(`
+        <div style="direction: rtl; min-width: 150px; text-align: right;">
+          <h3 style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">${proj.title}</h3>
+          <p style="margin: 0; color: #666; font-size: 12px;">مشروع تطوير عقاري</p>
+          ${proj.city ? `<p style="margin: 0; color: #666; font-size: 12px;">${proj.city}</p>` : ''}
+        </div>
+      `);
+      markersRef.current.push(marker);
+      allBounds.push([proj.latitude, proj.longitude]);
+    });
+
+    // Only fit bounds on initial load, not on every re-render
+    if (allBounds.length > 0 && !initialBoundsFitted.current) {
+      const bounds = L.latLngBounds(allBounds);
+      mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
+      initialBoundsFitted.current = true;
+    }
+  }, [filteredProperties, professionals, devProjects, mapReady]);
+
+  // When filters change, reset bounds fitting
+  useEffect(() => {
+    if (!mapReady || !mapInstance.current) return;
+    const allBounds: [number, number][] = filteredProperties
+      .filter(p => p.latitude && p.longitude)
+      .map(p => [p.latitude!, p.longitude!] as [number, number]);
+    
+    if (allBounds.length > 0) {
+      const bounds = L.latLngBounds(allBounds);
       mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [filteredProperties, mapReady]);
+  }, [selectedCity, selectedType, selectedListing]);
 
   const resetFilters = () => {
     setSelectedCity("all");
@@ -317,26 +389,18 @@ const MapSearchPage = () => {
             <div 
               ref={mapContainerRef} 
               className="w-full h-full" 
-              style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                right: 0, 
-                bottom: 0,
-                zIndex: 1 
-              }} 
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} 
             />
 
-            {/* Legend */}
-            <div className="absolute top-4 right-4 bg-card/95 backdrop-blur rounded-lg shadow-lg p-3 z-[1000]">
-              <p className="text-sm font-bold mb-2">دليل الألوان</p>
-              <div className="flex items-center gap-2 text-sm mb-1">
-                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#22c55e' }}></div>
-                <span>للبيع</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 rounded-full border-2 border-white shadow" style={{ backgroundColor: '#3b82f6' }}></div>
-                <span>للإيجار</span>
+            {/* Full Legend */}
+            <MapLegend className="absolute top-4 right-4 z-[1000]" />
+
+            {/* Stats */}
+            <div className="absolute top-4 left-4 bg-card rounded-lg shadow-lg p-3 z-[1000]">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-primary" />
+                <span className="font-bold">{filteredProperties.length}</span>
+                <span className="text-muted-foreground text-sm">عقار</span>
               </div>
             </div>
 
@@ -370,11 +434,6 @@ const MapSearchPage = () => {
                         {formatPrice(selectedProperty.price)} ر.س
                         {selectedProperty.listing_type === 'rent' && <span className="text-sm font-normal"> / شهري</span>}
                       </p>
-                      <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                        {selectedProperty.bedrooms && <span>{selectedProperty.bedrooms} غرف</span>}
-                        {selectedProperty.bathrooms && <span>{selectedProperty.bathrooms} حمام</span>}
-                        {selectedProperty.area && <span>{selectedProperty.area} م²</span>}
-                      </div>
                       <Link to={`/property/${selectedProperty.id}`}>
                         <Button size="sm" className="mt-3 w-full gap-2">
                           <Eye className="w-4 h-4" />
@@ -387,7 +446,6 @@ const MapSearchPage = () => {
               </Card>
             )}
 
-            {/* No properties message */}
             {filteredProperties.length === 0 && !loading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-[1000]">
                 <div className="text-center p-6">
