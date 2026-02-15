@@ -457,6 +457,78 @@ const Admin = () => {
     });
   };
 
+  const exportPlatformReport = async () => {
+    const accountTypeLabels: Record<string, string> = {
+      individual: 'فردي',
+      real_estate_office: 'مكتب عقاري',
+      financing_provider: 'جهة تمويلية',
+      appraiser: 'مقيم عقاري',
+      developer: 'مطوّر عقاري',
+    };
+
+    // Fetch additional data
+    const [financingRes, appraisalRes, managementRes, financingReqRes] = await Promise.all([
+      supabase.from('financing_offers').select('*', { count: 'exact', head: true }),
+      supabase.from('appraisal_requests').select('status', { count: 'exact' }),
+      supabase.from('property_management_requests').select('status', { count: 'exact' }),
+      supabase.from('financing_requests').select('status', { count: 'exact' }),
+    ]);
+
+    // Summary sheet
+    const usersByType = users.reduce((acc, u) => {
+      const type = accountTypeLabels[u.account_type || 'individual'] || 'غير محدد';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const summaryData = [
+      { 'البند': 'إجمالي المستخدمين', 'العدد': stats.totalUsers },
+      ...Object.entries(usersByType).map(([type, count]) => ({ 'البند': type, 'العدد': count })),
+      { 'البند': '---', 'العدد': 0 },
+      { 'البند': 'إجمالي الإعلانات العقارية', 'العدد': stats.totalProperties },
+      { 'البند': 'إعلانات منشورة', 'العدد': stats.approvedProperties },
+      { 'البند': 'إعلانات قيد المراجعة', 'العدد': stats.pendingProperties },
+      { 'البند': 'إعلانات مميزة', 'العدد': stats.featuredProperties },
+      { 'البند': 'إعلانات للبيع', 'العدد': properties.filter(p => p.listing_type === 'sale').length },
+      { 'البند': 'إعلانات للإيجار', 'العدد': properties.filter(p => p.listing_type === 'rent').length },
+      { 'البند': '---', 'العدد': 0 },
+      { 'البند': 'عروض التمويل', 'العدد': financingRes.count || 0 },
+      { 'البند': 'طلبات التقييم', 'العدد': appraisalRes.data?.length || 0 },
+      { 'البند': 'طلبات إدارة الأملاك', 'العدد': managementRes.data?.length || 0 },
+      { 'البند': 'طلبات التمويل', 'العدد': financingReqRes.data?.length || 0 },
+      { 'البند': 'مستخدمون جدد هذا الشهر', 'العدد': stats.newUsersThisMonth },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    
+    // Summary
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'ملخص الأداء');
+
+    // Properties per city
+    const citySheet = XLSX.utils.json_to_sheet(cityData.map(c => ({ 'المدينة': c.name, 'عدد الإعلانات': c.value })));
+    XLSX.utils.book_append_sheet(workbook, citySheet, 'حسب المدينة');
+
+    // Properties per type
+    const typeSheet = XLSX.utils.json_to_sheet(propertyTypeData.map(t => ({ 'النوع': t.name, 'العدد': t.value })));
+    XLSX.utils.book_append_sheet(workbook, typeSheet, 'حسب النوع');
+
+    // Monthly trends
+    const trendsSheet = XLSX.utils.json_to_sheet(monthlyPropertyData.map((m, i) => ({
+      'الشهر': m.month,
+      'عقارات جديدة': m.عقارات,
+      'مستخدمون جدد': monthlyUserData[i]?.مستخدمين || 0,
+    })));
+    XLSX.utils.book_append_sheet(workbook, trendsSheet, 'الاتجاهات الشهرية');
+
+    XLSX.writeFile(workbook, `تقرير_أداء_المنصة_${new Date().toLocaleDateString('ar-SA')}.xlsx`);
+    
+    toast({
+      title: 'تم التصدير',
+      description: 'تم تصدير تقرير أداء المنصة الشامل',
+    });
+  };
+
   // Filter properties
   const filteredProperties = properties.filter(p => {
     if (searchQuery && !p.title.includes(searchQuery) && !p.city.includes(searchQuery)) {
@@ -625,7 +697,13 @@ const Admin = () => {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              <h1 className="text-2xl font-bold">نظرة عامة</h1>
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">نظرة عامة</h1>
+                <Button variant="outline" size="sm" onClick={exportPlatformReport}>
+                  <Download className="h-4 w-4 ml-1" />
+                  تقرير شامل
+                </Button>
+              </div>
               
               {/* Stats Grid */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

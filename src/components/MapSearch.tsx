@@ -25,6 +25,14 @@ interface Property {
   property_type: string;
 }
 
+interface ProfessionalMarker {
+  id: string;
+  name: string;
+  type: 'office' | 'appraiser';
+  latitude: number;
+  longitude: number;
+}
+
 interface MapSearchProps {
   onClose?: () => void;
 }
@@ -65,6 +73,7 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
   const [mapReady, setMapReady] = useState(false);
   
   const [properties, setProperties] = useState<Property[]>([]);
+  const [professionals, setProfessionals] = useState<ProfessionalMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedCity, setSelectedCity] = useState("all");
@@ -75,9 +84,15 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
 
-  // Create custom icons for sale and rent
+  // Create custom icons
   const createIcon = (type: string) => {
-    const color = type === 'sale' ? '#22c55e' : '#3b82f6';
+    const colorMap: Record<string, string> = {
+      sale: '#22c55e',
+      rent: '#3b82f6',
+      office: '#c0c0c0',
+      appraiser: '#eab308',
+    };
+    const color = colorMap[type] || '#22c55e';
     return L.divIcon({
       className: 'custom-marker',
       html: `<div style="
@@ -93,22 +108,41 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
     });
   };
 
-  // Fetch properties with coordinates
+  // Fetch properties and professionals with coordinates
   useEffect(() => {
-    const fetchProperties = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        .limit(100);
+    const fetchData = async () => {
+      const [propertiesRes, professionalsRes] = await Promise.all([
+        supabase
+          .from('properties')
+          .select('*')
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null)
+          .limit(100),
+        supabase
+          .from('profiles')
+          .select('user_id, full_name, company_name, account_type, latitude, longitude')
+          .in('account_type', ['real_estate_office', 'appraiser'])
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null),
+      ]);
 
-      if (!error && data) {
-        setProperties(data);
+      if (!propertiesRes.error && propertiesRes.data) {
+        setProperties(propertiesRes.data);
+      }
+      if (!professionalsRes.error && professionalsRes.data) {
+        setProfessionals(
+          professionalsRes.data.map((p) => ({
+            id: p.user_id,
+            name: p.company_name || p.full_name || '',
+            type: p.account_type === 'real_estate_office' ? 'office' as const : 'appraiser' as const,
+            latitude: Number(p.latitude),
+            longitude: Number(p.longitude),
+          }))
+        );
       }
       setLoading(false);
     };
-    fetchProperties();
+    fetchData();
   }, []);
 
   // Filter properties based on selections
@@ -203,16 +237,32 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
       markersRef.current.push(marker);
     });
 
+    // Add professional markers (offices & appraisers)
+    professionals.forEach(prof => {
+      const marker = L.marker([prof.latitude, prof.longitude], {
+        icon: createIcon(prof.type),
+      }).addTo(mapInstance.current!);
+
+      const typeLabel = prof.type === 'office' ? 'مكتب عقاري' : 'مقيم عقاري';
+      marker.bindPopup(`
+        <div style="direction: rtl; min-width: 150px; text-align: right;">
+          <h3 style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">${prof.name}</h3>
+          <p style="margin: 0; color: #666; font-size: 12px;">${typeLabel}</p>
+        </div>
+      `);
+      markersRef.current.push(marker);
+    });
+
     // Fit bounds to show all markers
-    if (filteredProperties.length > 0) {
-      const bounds = L.latLngBounds(
-        filteredProperties
-          .filter(p => p.latitude && p.longitude)
-          .map(p => [p.latitude!, p.longitude!] as [number, number])
-      );
+    const allCoords = [
+      ...filteredProperties.filter(p => p.latitude && p.longitude).map(p => [p.latitude!, p.longitude!] as [number, number]),
+      ...professionals.map(p => [p.latitude, p.longitude] as [number, number]),
+    ];
+    if (allCoords.length > 0) {
+      const bounds = L.latLngBounds(allCoords);
       mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [filteredProperties, mapReady]);
+  }, [filteredProperties, professionals, mapReady]);
 
   const resetFilters = () => {
     setSelectedCity("all");

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedDashboardRoute from "@/components/ProtectedDashboardRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import Search from "./pages/Search";
@@ -84,12 +85,12 @@ const App = () => (
               <Route path="/financing/:id" element={<FinancingOfferPublicDetails />} />
               
               {/* Dashboard Routes */}
-              <Route path="/dashboard/user" element={<UserDashboard />} />
-              <Route path="/dashboard/office" element={<OfficeDashboard />} />
-              <Route path="/dashboard/office/property-management" element={<PropertyManagementRequests />} />
-              <Route path="/dashboard/financing" element={<FinancingDashboard />} />
-              <Route path="/dashboard/appraiser" element={<AppraiserDashboard />} />
-              <Route path="/dashboard/developer" element={<DeveloperDashboard />} />
+              <Route path="/dashboard/user" element={<ProtectedDashboardRoute allowedAccountTypes={["individual"]}><UserDashboard /></ProtectedDashboardRoute>} />
+              <Route path="/dashboard/office" element={<ProtectedDashboardRoute allowedAccountTypes={["real_estate_office"]}><OfficeDashboard /></ProtectedDashboardRoute>} />
+              <Route path="/dashboard/office/property-management" element={<ProtectedDashboardRoute allowedAccountTypes={["real_estate_office"]}><PropertyManagementRequests /></ProtectedDashboardRoute>} />
+              <Route path="/dashboard/financing" element={<ProtectedDashboardRoute allowedAccountTypes={["financing_provider"]}><FinancingDashboard /></ProtectedDashboardRoute>} />
+              <Route path="/dashboard/appraiser" element={<ProtectedDashboardRoute allowedAccountTypes={["appraiser"]}><AppraiserDashboard /></ProtectedDashboardRoute>} />
+              <Route path="/dashboard/developer" element={<ProtectedDashboardRoute allowedAccountTypes={["developer"]}><DeveloperDashboard /></ProtectedDashboardRoute>} />
               {/* Property Management Request */}
               <Route path="/property-management-request" element={<PropertyManagementRequest />} />
               
