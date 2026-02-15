@@ -9,6 +9,7 @@ import HomeMapSection from "@/components/HomeMapSection";
 import Footer from "@/components/Footer";
 import FinancingOffersCarousel from "@/components/FinancingOffersCarousel";
 import AdvancedAdvertisement from "@/components/AdvancedAdvertisement";
+import DeveloperProjectsSection from "@/components/DeveloperProjectsSection";
 import { Button } from "@/components/ui/button";
 import { Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -62,6 +63,7 @@ const Index = () => {
           />
         </section>
         
+        <DeveloperProjectsSection />
         <HomeMapSection />
         <CityGrid />
         <StatsSection />

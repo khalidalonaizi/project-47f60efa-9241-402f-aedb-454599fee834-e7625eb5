@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Home, Loader2, Search, Building2, Eye, Filter, X } from "lucide-react";
+import { MapPin, Home, Loader2, Search, Building2, Eye, Filter, X, HardHat } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import MapLegend from "@/components/MapLegend";
 import L from "leaflet";
@@ -40,6 +40,12 @@ interface DeveloperProject {
   city: string | null;
   latitude: number;
   longitude: number;
+  user_id: string;
+  images: string[] | null;
+  status: string;
+  completion_percentage: number | null;
+  price_from: number | null;
+  price_to: number | null;
 }
 
 // Fix for default marker icons in Leaflet
@@ -83,6 +89,7 @@ const HomeMapSection = () => {
   const [devProjects, setDevProjects] = useState<DeveloperProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedDevProject, setSelectedDevProject] = useState<DeveloperProject | null>(null);
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedListing, setSelectedListing] = useState("all");
@@ -135,7 +142,7 @@ const HomeMapSection = () => {
           .not('longitude', 'is', null),
         supabase
           .from('developer_projects')
-          .select('id, title, city, latitude, longitude')
+          .select('id, title, city, latitude, longitude, user_id, images, status, completion_percentage, price_from, price_to')
           .not('latitude', 'is', null)
           .not('longitude', 'is', null),
       ]);
@@ -238,7 +245,7 @@ const HomeMapSection = () => {
         </div>
       `;
       marker.bindPopup(popupContent);
-      marker.on('click', () => setSelectedProperty(property));
+      marker.on('click', () => { setSelectedProperty(property); setSelectedDevProject(null); });
       markersRef.current.push(marker);
       allBounds.push([property.latitude, property.longitude]);
     });
@@ -275,6 +282,7 @@ const HomeMapSection = () => {
           ${proj.city ? `<p style="margin: 0; color: #666; font-size: 12px;">${proj.city}</p>` : ''}
         </div>
       `);
+      marker.on('click', () => { setSelectedDevProject(proj); setSelectedProperty(null); });
       markersRef.current.push(marker);
       allBounds.push([proj.latitude, proj.longitude]);
     });
@@ -437,6 +445,43 @@ const HomeMapSection = () => {
                             <Button size="sm" className="mt-2 w-full">
                               <Eye className="w-3 h-3 ml-1" />
                               عرض التفاصيل
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Selected Developer Project Card */}
+                {selectedDevProject && (
+                  <Card className="absolute bottom-4 right-4 left-4 md:left-auto md:w-80 z-[1000] shadow-lg">
+                    <CardContent className="p-4">
+                      <div className="flex gap-3">
+                        {selectedDevProject.images?.[0] ? (
+                          <img src={selectedDevProject.images[0]} alt={selectedDevProject.title} className="w-20 h-20 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <HardHat className="w-8 h-8 text-primary" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-sm line-clamp-1">{selectedDevProject.title}</h3>
+                          {selectedDevProject.city && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                              <MapPin className="w-3 h-3" />
+                              <span>{selectedDevProject.city}</span>
+                            </div>
+                          )}
+                          {selectedDevProject.price_from && selectedDevProject.price_to && (
+                            <p className="text-primary font-bold text-xs mt-1">
+                              {formatPrice(selectedDevProject.price_from)} - {formatPrice(selectedDevProject.price_to)} ر.س
+                            </p>
+                          )}
+                          <Link to={`/developer/${selectedDevProject.user_id}`}>
+                            <Button size="sm" className="mt-2 w-full">
+                              <Eye className="w-3 h-3 ml-1" />
+                              عرض المطور
                             </Button>
                           </Link>
                         </div>
