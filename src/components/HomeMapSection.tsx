@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Home, Loader2, Search, Building2, Eye, Filter, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import MapLegend from "@/components/MapLegend";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -28,7 +29,15 @@ interface Property {
 interface ProfessionalMarker {
   id: string;
   name: string;
-  type: 'office' | 'appraiser';
+  type: 'office' | 'appraiser' | 'financing';
+  latitude: number;
+  longitude: number;
+}
+
+interface DeveloperProject {
+  id: string;
+  title: string;
+  city: string | null;
   latitude: number;
   longitude: number;
 }
@@ -67,9 +76,11 @@ const HomeMapSection = () => {
   const mapInstance = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const [mapReady, setMapReady] = useState(false);
+  const initialBoundsFitted = useRef(false);
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [professionals, setProfessionals] = useState<ProfessionalMarker[]>([]);
+  const [devProjects, setDevProjects] = useState<DeveloperProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedCity, setSelectedCity] = useState("all");
@@ -81,13 +92,14 @@ const HomeMapSection = () => {
     return new Intl.NumberFormat("ar-SA").format(price);
   };
 
-  // Create custom icons
   const createIcon = (type: string) => {
     const colorMap: Record<string, string> = {
       sale: '#22c55e',
       rent: '#3b82f6',
       office: '#c0c0c0',
       appraiser: '#eab308',
+      financing: '#ef4444',
+      developer: '#8b5cf6',
     };
     const color = colorMap[type] || '#22c55e';
     return L.divIcon({
@@ -105,10 +117,10 @@ const HomeMapSection = () => {
     });
   };
 
-  // Fetch properties and professionals with coordinates
+  // Fetch properties, professionals, and developer projects
   useEffect(() => {
     const fetchData = async () => {
-      const [propertiesRes, professionalsRes] = await Promise.all([
+      const [propertiesRes, professionalsRes, devProjectsRes] = await Promise.all([
         supabase
           .from('properties')
           .select('*')
@@ -118,7 +130,12 @@ const HomeMapSection = () => {
         supabase
           .from('profiles')
           .select('user_id, full_name, company_name, account_type, latitude, longitude')
-          .in('account_type', ['real_estate_office', 'appraiser'])
+          .in('account_type', ['real_estate_office', 'appraiser', 'financing_provider'])
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null),
+        supabase
+          .from('developer_projects')
+          .select('id, title, city, latitude, longitude')
           .not('latitude', 'is', null)
           .not('longitude', 'is', null),
       ]);
@@ -131,9 +148,20 @@ const HomeMapSection = () => {
           professionalsRes.data.map((p) => ({
             id: p.user_id,
             name: p.company_name || p.full_name || '',
-            type: p.account_type === 'real_estate_office' ? 'office' as const : 'appraiser' as const,
+            type: p.account_type === 'real_estate_office' ? 'office' as const
+              : p.account_type === 'financing_provider' ? 'financing' as const
+              : 'appraiser' as const,
             latitude: Number(p.latitude),
             longitude: Number(p.longitude),
+          }))
+        );
+      }
+      if (!devProjectsRes.error && devProjectsRes.data) {
+        setDevProjects(
+          devProjectsRes.data.map((d) => ({
+            ...d,
+            latitude: Number(d.latitude),
+            longitude: Number(d.longitude),
           }))
         );
       }
@@ -142,43 +170,30 @@ const HomeMapSection = () => {
     fetchData();
   }, []);
 
-  // Filter properties based on selections
-  const filteredProperties = properties.filter(property => {
+  const filteredProperties = useMemo(() => properties.filter(property => {
     if (selectedCity !== "all" && property.city !== selectedCity) return false;
     if (selectedType !== "all" && property.property_type !== selectedType) return false;
     if (selectedListing !== "all" && property.listing_type !== selectedListing) return false;
     return true;
-  });
+  }), [properties, selectedCity, selectedType, selectedListing]);
 
-  // Initialize map after loading is complete
+  // Initialize map
   useEffect(() => {
-    if (loading) return;
-    if (!mapContainerRef.current) return;
-    if (mapInstance.current) return;
+    if (loading || !mapContainerRef.current || mapInstance.current) return;
 
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       if (!mapContainerRef.current) return;
-      
       try {
-        // Initialize the map centered on Saudi Arabia
         mapInstance.current = L.map(mapContainerRef.current, {
           center: [24.7136, 46.6753],
           zoom: 6,
           zoomControl: true,
         });
-
-        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
           maxZoom: 19,
         }).addTo(mapInstance.current);
-
-        // Force a resize after initialization
-        setTimeout(() => {
-          mapInstance.current?.invalidateSize();
-        }, 100);
-
+        setTimeout(() => mapInstance.current?.invalidateSize(), 100);
         setMapReady(true);
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -195,20 +210,17 @@ const HomeMapSection = () => {
     };
   }, [loading]);
 
-  // Add markers when map is ready and properties change
+  // Add markers
   useEffect(() => {
     if (!mapReady || !mapInstance.current) return;
 
-    // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
     const allBounds: [number, number][] = [];
 
-    // Add markers for each filtered property
     filteredProperties.forEach(property => {
       if (!property.latitude || !property.longitude) return;
-
       const marker = L.marker([property.latitude, property.longitude], {
         icon: createIcon(property.listing_type),
       }).addTo(mapInstance.current!);
@@ -225,38 +237,67 @@ const HomeMapSection = () => {
           </p>
         </div>
       `;
-
       marker.bindPopup(popupContent);
       marker.on('click', () => setSelectedProperty(property));
       markersRef.current.push(marker);
       allBounds.push([property.latitude, property.longitude]);
     });
 
-    // Add professional markers (offices & appraisers)
+    // Professional markers
     professionals.forEach(prof => {
       const marker = L.marker([prof.latitude, prof.longitude], {
         icon: createIcon(prof.type),
       }).addTo(mapInstance.current!);
-
-      const typeLabel = prof.type === 'office' ? 'مكتب عقاري' : 'مقيم عقاري';
-      const popupContent = `
+      const typeLabels: Record<string, string> = {
+        office: 'مكتب عقاري',
+        appraiser: 'مقيم عقاري',
+        financing: 'جهة تمويلية',
+      };
+      marker.bindPopup(`
         <div style="direction: rtl; min-width: 150px; text-align: right;">
           <h3 style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">${prof.name}</h3>
-          <p style="margin: 0; color: #666; font-size: 12px;">${typeLabel}</p>
+          <p style="margin: 0; color: #666; font-size: 12px;">${typeLabels[prof.type] || ''}</p>
         </div>
-      `;
-
-      marker.bindPopup(popupContent);
+      `);
       markersRef.current.push(marker);
       allBounds.push([prof.latitude, prof.longitude]);
     });
 
-    // Fit bounds to show all markers
+    // Developer project markers
+    devProjects.forEach(proj => {
+      const marker = L.marker([proj.latitude, proj.longitude], {
+        icon: createIcon('developer'),
+      }).addTo(mapInstance.current!);
+      marker.bindPopup(`
+        <div style="direction: rtl; min-width: 150px; text-align: right;">
+          <h3 style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">${proj.title}</h3>
+          <p style="margin: 0; color: #666; font-size: 12px;">مشروع تطوير عقاري</p>
+          ${proj.city ? `<p style="margin: 0; color: #666; font-size: 12px;">${proj.city}</p>` : ''}
+        </div>
+      `);
+      markersRef.current.push(marker);
+      allBounds.push([proj.latitude, proj.longitude]);
+    });
+
+    // Only fit bounds on initial load
+    if (allBounds.length > 0 && !initialBoundsFitted.current) {
+      const bounds = L.latLngBounds(allBounds);
+      mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
+      initialBoundsFitted.current = true;
+    }
+  }, [filteredProperties, professionals, devProjects, mapReady]);
+
+  // Fit bounds when filters change
+  useEffect(() => {
+    if (!mapReady || !mapInstance.current) return;
+    const allBounds: [number, number][] = filteredProperties
+      .filter(p => p.latitude && p.longitude)
+      .map(p => [p.latitude!, p.longitude!] as [number, number]);
     if (allBounds.length > 0) {
       const bounds = L.latLngBounds(allBounds);
       mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [filteredProperties, professionals, mapReady]);
+  }, [selectedCity, selectedType, selectedListing]);
 
   const resetFilters = () => {
     setSelectedCity("all");
@@ -265,6 +306,16 @@ const HomeMapSection = () => {
   };
 
   const hasActiveFilters = selectedCity !== "all" || selectedType !== "all" || selectedListing !== "all";
+
+  // Update MapLegend to include developer projects
+  const legendItems = [
+    { color: '#22c55e', label: 'عقارات للبيع' },
+    { color: '#3b82f6', label: 'عقارات للإيجار' },
+    { color: '#ef4444', label: 'جهات تمويلية' },
+    { color: '#eab308', label: 'مقيمون عقاريون' },
+    { color: '#c0c0c0', label: 'مكاتب عقارية' },
+    { color: '#8b5cf6', label: 'مشاريع تطوير' },
+  ];
 
   return (
     <section className="py-16 bg-muted/30">
@@ -344,48 +395,14 @@ const HomeMapSection = () => {
               </div>
             ) : (
               <>
-                {/* Map Container */}
                 <div 
                   ref={mapContainerRef} 
                   className="w-full h-full" 
-                  style={{ 
-                    position: 'absolute', 
-                    top: 0, 
-                    left: 0, 
-                    right: 0, 
-                    bottom: 0,
-                    zIndex: 1 
-                  }} 
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }} 
                 />
 
                 {/* Legend */}
-                <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg shadow-lg p-3 z-[1000]">
-                  <p className="text-xs font-bold mb-2">دليل الألوان</p>
-                  <div className="flex items-center gap-2 text-xs mb-1">
-                    <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#22c55e' }}></div>
-                    <span className="text-muted-foreground">عقارات للبيع</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs mb-1">
-                    <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#3b82f6' }}></div>
-                    <span className="text-muted-foreground">عقارات للإيجار</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs mb-1">
-                    <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#ef4444' }}></div>
-                    <span className="text-muted-foreground">عروض التمويل</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs mb-1">
-                    <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#eab308' }}></div>
-                    <span className="text-muted-foreground">طلبات التقييم</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs mb-1">
-                    <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#c0c0c0' }}></div>
-                    <span className="text-muted-foreground">مكاتب عقارية</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <div className="w-3 h-3 rounded-full border border-white shadow-sm" style={{ backgroundColor: '#8b5cf6' }}></div>
-                    <span className="text-muted-foreground">موقعك الحالي</span>
-                  </div>
-                </div>
+                <MapLegend items={legendItems} className="absolute top-4 right-4 z-[1000]" />
 
                 {/* Stats */}
                 <div className="absolute top-4 left-4 bg-card rounded-lg shadow-lg p-3 z-[1000]">
@@ -428,7 +445,6 @@ const HomeMapSection = () => {
                   </Card>
                 )}
 
-                {/* No properties message */}
                 {filteredProperties.length === 0 && !loading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-[1000]">
                     <div className="text-center">
