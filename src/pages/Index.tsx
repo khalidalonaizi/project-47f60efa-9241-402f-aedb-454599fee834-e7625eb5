@@ -11,7 +11,8 @@ import FinancingOffersCarousel from "@/components/FinancingOffersCarousel";
 import AdvancedAdvertisement from "@/components/AdvancedAdvertisement";
 import DeveloperProjectsSection from "@/components/DeveloperProjectsSection";
 import { Button } from "@/components/ui/button";
-import { Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Building2, Gavel } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -64,6 +65,24 @@ const Index = () => {
         </section>
         
         <DeveloperProjectsSection />
+
+        {/* Real Estate Auction - Coming Soon */}
+        <section className="container mx-auto px-4 py-12">
+          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-dashed border-amber-500/30 p-10 text-center">
+            <div className="absolute top-4 left-4">
+              <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-500/30 text-sm">
+                قريباً
+              </Badge>
+            </div>
+            <Gavel className="h-16 w-16 mx-auto text-amber-500/60 mb-4" />
+            <h2 className="text-3xl font-bold mb-3">المزاد العقاري</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+              سيتم إضافة خدمة المزاد العقاري قريباً لتمكينك من المشاركة في مزادات عقارية شفافة وآمنة
+            </p>
+            <p className="text-amber-600 dark:text-amber-400 font-semibold mt-4">🚧 سيُضاف قريباً 🚧</p>
+          </div>
+        </section>
+
         <HomeMapSection />
         <CityGrid />
         <StatsSection />
