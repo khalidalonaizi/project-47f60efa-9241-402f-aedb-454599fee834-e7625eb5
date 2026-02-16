@@ -13,6 +13,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PropertyMapView from "@/components/dashboard/PropertyMapView";
 import LogoUpload from "@/components/LogoUpload";
 import LocationPicker from "@/components/LocationPicker";
+import ProfileCompletionAlert from "@/components/ProfileCompletionAlert";
 import {
   Building2,
   Eye,
@@ -273,6 +274,15 @@ const OfficeDashboard = () => {
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsContent value="overview" className="space-y-6">
+          {(() => {
+            const missing: string[] = [];
+            if (!officeProfile.company_name) missing.push('اسم المكتب');
+            if (!officeProfile.phone) missing.push('رقم الهاتف');
+            if (!officeProfile.company_address) missing.push('العنوان');
+            if (!officeProfile.latitude) missing.push('الموقع على الخريطة');
+            if (!officeProfile.license_number) missing.push('رقم الترخيص');
+            return <ProfileCompletionAlert missingFields={missing} onGoToProfile={() => setActiveTab("office-info")} accountTypeLabel="المكتب" />;
+          })()}
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>

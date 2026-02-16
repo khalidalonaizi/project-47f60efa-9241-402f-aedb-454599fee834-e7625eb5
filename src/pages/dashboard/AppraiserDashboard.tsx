@@ -30,6 +30,7 @@ import {
   Camera
 } from "lucide-react";
 import ImageUploadWithCamera from "@/components/ImageUploadWithCamera";
+import ProfileCompletionAlert from "@/components/ProfileCompletionAlert";
 import { toast } from "@/hooks/use-toast";
 
 interface AppraisalRequest {
@@ -247,6 +248,13 @@ const AppraiserDashboard = () => {
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsContent value="overview" className="space-y-6">
+          {(() => {
+            const missing: string[] = [];
+            if (!profile.full_name) missing.push('الاسم الكامل');
+            if (!profile.phone) missing.push('رقم الهاتف');
+            if (!profile.license_number) missing.push('رقم الترخيص');
+            return <ProfileCompletionAlert missingFields={missing} onGoToProfile={() => setActiveTab("profile")} accountTypeLabel="المقيم العقاري" />;
+          })()}
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>

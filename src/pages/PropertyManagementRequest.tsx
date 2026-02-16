@@ -133,8 +133,7 @@ const PropertyManagementRequest = () => {
       const { data, error } = await supabase
         .from('profiles_public')
         .select('user_id, company_name, company_logo, company_address, latitude, longitude')
-        .eq('account_type', 'real_estate_office')
-        .not('company_name', 'is', null);
+        .eq('account_type', 'real_estate_office');
 
       if (error) throw error;
 

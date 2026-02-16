@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import LocationPicker from "@/components/LocationPicker";
+import ProfileCompletionAlert from "@/components/ProfileCompletionAlert";
 import ImageUploadWithCamera from "@/components/ImageUploadWithCamera";
 import {
   HardHat, Plus, TrendingUp, MapPin, Loader2, FileText, Users,
@@ -155,6 +156,11 @@ const DeveloperDashboard = () => {
     <DashboardLayout title="لوحة تحكم المطوّر العقاري" subtitle="إدارة مشاريع التطوير العقاري" menuItems={menuItems} activeTab={activeTab} onTabChange={setActiveTab}>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsContent value="overview" className="space-y-6">
+          {(() => {
+            const missing: string[] = [];
+            if (projects.length === 0) missing.push('مشروع واحد على الأقل');
+            return <ProfileCompletionAlert missingFields={missing} onGoToProfile={() => { setActiveTab("projects"); setShowAddForm(true); }} accountTypeLabel="المطوّر العقاري" />;
+          })()}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card><CardContent className="p-4 text-center"><HardHat className="w-8 h-8 mx-auto text-primary mb-2" /><p className="text-2xl font-bold">{projects.length}</p><p className="text-sm text-muted-foreground">إجمالي المشاريع</p></CardContent></Card>
             <Card><CardContent className="p-4 text-center"><Building2 className="w-8 h-8 mx-auto text-blue-500 mb-2" /><p className="text-2xl font-bold">{projects.filter(p => p.status === 'under_construction').length}</p><p className="text-sm text-muted-foreground">قيد الإنشاء</p></CardContent></Card>
