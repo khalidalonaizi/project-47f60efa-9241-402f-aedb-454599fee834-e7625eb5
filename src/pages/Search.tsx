@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { saudiCityNamesAr } from '@/lib/propertyTypes';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -292,18 +293,7 @@ const SearchPage = () => {
     }
   };
 
-  const cities = [
-    "الرياض",
-    "جدة",
-    "مكة المكرمة",
-    "المدينة المنورة",
-    "الدمام",
-    "الخبر",
-    "الظهران",
-    "الطائف",
-    "تبوك",
-    "أبها",
-  ];
+  const cities = saudiCityNamesAr;
 
   const propertyTypes = [
     { value: "apartment", label: "شقة" },

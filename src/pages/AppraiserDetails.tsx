@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { saudiCityNamesAr } from '@/lib/propertyTypes';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -88,10 +89,7 @@ const propertyTypes = [
   { value: 'shop', label: 'محل تجاري' },
 ];
 
-const cities = [
-  'الرياض', 'جدة', 'مكة المكرمة', 'المدينة المنورة',
-  'الدمام', 'الخبر', 'الظهران', 'تبوك', 'أبها', 'الطائف'
-];
+const cities = saudiCityNamesAr;
 
 const AppraiserDetails = () => {
   const { id } = useParams<{ id: string }>();

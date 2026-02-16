@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { saudiCityNamesAr } from '@/lib/propertyTypes';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -42,18 +43,7 @@ const amenitiesList = [
   'ملعب أطفال',
 ];
 
-const cities = [
-  'الرياض',
-  'جدة',
-  'مكة المكرمة',
-  'المدينة المنورة',
-  'الدمام',
-  'الخبر',
-  'الظهران',
-  'تبوك',
-  'أبها',
-  'الطائف',
-];
+const cities = saudiCityNamesAr;
 
 const propertyTypes = [
   { value: 'apartment', label: 'شقة' },
