@@ -132,7 +132,7 @@ const PropertyManagementRequest = () => {
     try {
       const { data, error } = await supabase
         .from('profiles_public')
-        .select('user_id, company_name, company_logo, company_address, latitude, longitude')
+        .select('user_id, company_name, company_logo, company_address, latitude, longitude, phone, license_number')
         .eq('account_type', 'real_estate_office');
 
       if (error) throw error;
@@ -145,6 +145,8 @@ const PropertyManagementRequest = () => {
         company_address: office.company_address,
         latitude: office.latitude,
         longitude: office.longitude,
+        phone: office.phone,
+        license_number: office.license_number,
       }));
 
       setOffices(officeData);

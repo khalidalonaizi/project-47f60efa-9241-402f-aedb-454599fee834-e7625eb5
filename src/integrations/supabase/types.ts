@@ -1038,7 +1038,9 @@ export type Database = {
           full_name: string | null
           id: string | null
           latitude: number | null
+          license_number: string | null
           longitude: number | null
+          phone: string | null
           user_id: string | null
           years_of_experience: number | null
         }
@@ -1053,7 +1055,9 @@ export type Database = {
           full_name?: string | null
           id?: string | null
           latitude?: number | null
+          license_number?: string | null
           longitude?: number | null
+          phone?: string | null
           user_id?: string | null
           years_of_experience?: number | null
         }
@@ -1068,7 +1072,9 @@ export type Database = {
           full_name?: string | null
           id?: string | null
           latitude?: number | null
+          license_number?: string | null
           longitude?: number | null
+          phone?: string | null
           user_id?: string | null
           years_of_experience?: number | null
         }
