@@ -99,7 +99,14 @@ const LocationPicker = ({ latitude, longitude, onLocationChange, autoDetectLocat
 
     setMapReady(true);
 
+    // Use ResizeObserver to fix map tiles not loading fully
+    const resizeObserver = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize();
+    });
+    resizeObserver.observe(containerRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -145,8 +152,8 @@ const LocationPicker = ({ latitude, longitude, onLocationChange, autoDetectLocat
       
       <div 
         ref={containerRef} 
-        className="h-[400px] rounded-lg border border-border overflow-hidden"
-        style={{ zIndex: 0 }}
+        className="rounded-lg border border-border overflow-hidden"
+        style={{ zIndex: 0, height: '400px', minHeight: '400px' }}
       />
       
       {latitude && longitude && (
