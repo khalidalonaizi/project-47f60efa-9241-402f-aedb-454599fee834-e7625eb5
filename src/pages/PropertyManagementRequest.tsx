@@ -167,17 +167,30 @@ const PropertyManagementRequest = () => {
       ? [userLocation.lat, userLocation.lng] 
       : [24.7136, 46.6753];
 
-    mapRef.current = L.map(mapContainerRef.current).setView(defaultCenter as [number, number], 10);
+    const map = L.map(mapContainerRef.current).setView(defaultCenter as [number, number], 10);
+    mapRef.current = map;
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
-    }).addTo(mapRef.current);
+    }).addTo(map);
+
+    // Force invalidateSize after a short delay to fix gray tiles
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    // Also use ResizeObserver for container size changes
+    const container = mapContainerRef.current;
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    resizeObserver.observe(container);
 
     // Add office markers
     offices.forEach((office) => {
       if (office.latitude && office.longitude) {
         const marker = L.marker([office.latitude, office.longitude], { icon: officeIcon })
-          .addTo(mapRef.current!);
+          .addTo(map);
 
         marker.bindPopup(`
           <div style="direction: rtl; text-align: right; min-width: 150px;">
@@ -211,11 +224,12 @@ const PropertyManagementRequest = () => {
       });
 
       L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
-        .addTo(mapRef.current)
+        .addTo(map)
         .bindPopup('<div style="direction: rtl;">موقعك الحالي</div>');
     }
 
     return () => {
+      resizeObserver.disconnect();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
