@@ -69,6 +69,7 @@ const DeveloperDashboard = () => {
     latitude: null as number | null, longitude: null as number | null,
     images: [] as string[],
     vision_quality: "", vision_sustainability: "", vision_innovation: "", vision_experience: "",
+    contact_phone: "", contact_email: "", contact_whatsapp: "",
   });
 
   useEffect(() => {
@@ -117,6 +118,9 @@ const DeveloperDashboard = () => {
       vision_sustainability: newProject.vision_sustainability || null,
       vision_innovation: newProject.vision_innovation || null,
       vision_experience: newProject.vision_experience || null,
+      contact_phone: newProject.contact_phone || null,
+      contact_email: newProject.contact_email || null,
+      contact_whatsapp: newProject.contact_whatsapp || null,
     } as any);
     setSaving(false);
     if (error) {
@@ -201,6 +205,15 @@ const DeveloperDashboard = () => {
                   <div className="space-y-2"><Label>السعر من (ر.س)</Label><Input type="number" value={newProject.price_from} onChange={(e) => setNewProject({ ...newProject, price_from: parseInt(e.target.value) || 0 })} /></div>
                   <div className="space-y-2"><Label>السعر إلى (ر.س)</Label><Input type="number" value={newProject.price_to} onChange={(e) => setNewProject({ ...newProject, price_to: parseInt(e.target.value) || 0 })} /></div>
                   <div className="md:col-span-2 space-y-2"><Label>وصف المشروع</Label><Textarea value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} rows={3} /></div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold">معلومات الاتصال بالمشروع</h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2"><Label>رقم الهاتف</Label><Input value={newProject.contact_phone} onChange={(e) => setNewProject({ ...newProject, contact_phone: e.target.value })} placeholder="05xxxxxxxx" dir="ltr" /></div>
+                    <div className="space-y-2"><Label>البريد الإلكتروني</Label><Input type="email" value={newProject.contact_email} onChange={(e) => setNewProject({ ...newProject, contact_email: e.target.value })} placeholder="email@example.com" dir="ltr" /></div>
+                    <div className="space-y-2"><Label>واتساب</Label><Input value={newProject.contact_whatsapp} onChange={(e) => setNewProject({ ...newProject, contact_whatsapp: e.target.value })} placeholder="966xxxxxxxxx" dir="ltr" /></div>
+                  </div>
                 </div>
 
                 <div className="space-y-4">

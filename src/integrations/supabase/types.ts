@@ -178,6 +178,9 @@ export type Database = {
           available_units: number | null
           city: string | null
           completion_percentage: number | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
           created_at: string
           description: string | null
           id: string
@@ -207,6 +210,9 @@ export type Database = {
           available_units?: number | null
           city?: string | null
           completion_percentage?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -236,6 +242,9 @@ export type Database = {
           available_units?: number | null
           city?: string | null
           completion_percentage?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          contact_whatsapp?: string | null
           created_at?: string
           description?: string | null
           id?: string

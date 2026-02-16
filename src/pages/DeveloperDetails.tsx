@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { HardHat, MapPin, Building2, Loader2, ArrowRight, Lightbulb, Leaf, Sparkles, Heart } from 'lucide-react';
+import { HardHat, MapPin, Building2, Loader2, ArrowRight, Lightbulb, Leaf, Sparkles, Heart, Phone, Mail, MessageCircle } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -123,6 +123,27 @@ const DeveloperDetails = () => {
                 {project.price_from && project.price_to && <p className="text-primary font-bold">{formatPrice(project.price_from)} - {formatPrice(project.price_to)} ر.س</p>}
                 {project.total_units && <p className="text-sm text-muted-foreground mt-1">{project.available_units || 0} وحدة متاحة من {project.total_units}</p>}
                 {project.description && <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{project.description}</p>}
+
+                {/* Contact Info */}
+                {(project.contact_phone || project.contact_email || project.contact_whatsapp) && (
+                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+                    {project.contact_phone && (
+                      <a href={`tel:${project.contact_phone}`} className="inline-flex items-center gap-1 text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors">
+                        <Phone className="w-3.5 h-3.5" />{project.contact_phone}
+                      </a>
+                    )}
+                    {project.contact_email && (
+                      <a href={`mailto:${project.contact_email}`} className="inline-flex items-center gap-1 text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors">
+                        <Mail className="w-3.5 h-3.5" />{project.contact_email}
+                      </a>
+                    )}
+                    {project.contact_whatsapp && (
+                      <a href={`https://wa.me/${project.contact_whatsapp}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm bg-green-500/10 text-green-600 px-3 py-1.5 rounded-full hover:bg-green-500/20 transition-colors">
+                        <MessageCircle className="w-3.5 h-3.5" />واتساب
+                      </a>
+                    )}
+                  </div>
+                )}
 
                 {/* Vision */}
                 {(project.vision_quality || project.vision_sustainability || project.vision_innovation || project.vision_experience) && (
