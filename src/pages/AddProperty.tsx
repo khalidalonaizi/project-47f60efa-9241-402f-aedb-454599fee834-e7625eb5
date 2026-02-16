@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SearchableCitySelect from '@/components/SearchableCitySelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -259,18 +260,7 @@ const AddProperty = () => {
                 </h3>
                 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Select value={city || undefined} onValueChange={setCity}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر المدينة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableCitySelect value={city} onValueChange={setCity} />
                   {errors.city && <p className="text-destructive text-sm">{errors.city}</p>}
                   
                   <Input
