@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { propertyTypesSelectAr } from '@/lib/propertyTypes';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -79,14 +80,7 @@ interface RealEstateOffice {
   longitude?: number;
 }
 
-const propertyTypes = [
-  { value: 'apartment', label: 'شقة' },
-  { value: 'villa', label: 'فيلا' },
-  { value: 'land', label: 'أرض' },
-  { value: 'building', label: 'عمارة' },
-  { value: 'office', label: 'مكتب' },
-  { value: 'shop', label: 'محل تجاري' },
-];
+const localPropertyTypes = propertyTypesSelectAr;
 
 const PropertyManagementRequest = () => {
   const navigate = useNavigate();
@@ -272,7 +266,7 @@ const PropertyManagementRequest = () => {
         user_id: selectedOffice.user_id,
         type: 'property_management',
         title: 'طلب إدارة أملاك جديد',
-        message: `طلب جديد من ${requesterName} لإدارة ${propertyTypes.find(t => t.value === propertyType)?.label || propertyType}`,
+        message: `طلب جديد من ${requesterName} لإدارة ${localPropertyTypes.find(t => t.value === propertyType)?.label || propertyType}`,
       });
 
       toast({
@@ -470,7 +464,7 @@ const PropertyManagementRequest = () => {
                     <SelectValue placeholder="اختر نوع العقار" />
                   </SelectTrigger>
                   <SelectContent>
-                    {propertyTypes.map((type) => (
+                    {localPropertyTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>

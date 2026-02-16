@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { saudiCityNamesAr } from '@/lib/propertyTypes';
+import { saudiCityNamesAr, propertyTypesSelectAr } from '@/lib/propertyTypes';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -80,14 +80,7 @@ interface Appraiser {
   longitude: number | null;
 }
 
-const propertyTypes = [
-  { value: 'apartment', label: 'شقة' },
-  { value: 'villa', label: 'فيلا' },
-  { value: 'land', label: 'أرض' },
-  { value: 'building', label: 'عمارة' },
-  { value: 'office', label: 'مكتب' },
-  { value: 'shop', label: 'محل تجاري' },
-];
+const localPropertyTypes = propertyTypesSelectAr;
 
 const cities = saudiCityNamesAr;
 
@@ -345,7 +338,7 @@ const AppraiserDetails = () => {
                           <SelectValue placeholder="اختر نوع العقار" />
                         </SelectTrigger>
                         <SelectContent>
-                          {propertyTypes.map(type => (
+                          {localPropertyTypes.map(type => (
                             <SelectItem key={type.value} value={type.value}>
                               {type.label}
                             </SelectItem>

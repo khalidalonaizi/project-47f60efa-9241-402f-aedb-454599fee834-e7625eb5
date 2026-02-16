@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { saudiCityNamesAr } from '@/lib/propertyTypes';
+import { saudiCityNamesAr, propertyTypesSelectAr } from '@/lib/propertyTypes';
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,14 +45,7 @@ interface PriceAlert {
 
 const cities = saudiCityNamesAr;
 
-const propertyTypes = [
-  { value: "apartment", label: "شقة" },
-  { value: "villa", label: "فيلا" },
-  { value: "land", label: "أرض" },
-  { value: "building", label: "عمارة" },
-  { value: "office", label: "مكتب" },
-  { value: "shop", label: "محل تجاري" },
-];
+const localPropertyTypes = propertyTypesSelectAr;
 
 const PriceAlerts = () => {
   const { user, loading } = useAuth();
@@ -149,7 +142,7 @@ const PriceAlerts = () => {
 
   const getPropertyTypeLabel = (type: string | null) => {
     if (!type) return "جميع الأنواع";
-    return propertyTypes.find((t) => t.value === type)?.label || type;
+    return localPropertyTypes.find((t) => t.value === type)?.label || type;
   };
 
   if (loading) {
@@ -228,7 +221,7 @@ const PriceAlerts = () => {
                       <SelectValue placeholder="جميع الأنواع" />
                     </SelectTrigger>
                     <SelectContent>
-                      {propertyTypes.map((type) => (
+                      {localPropertyTypes.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}
                         </SelectItem>
