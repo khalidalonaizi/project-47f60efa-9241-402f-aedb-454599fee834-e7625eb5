@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { addUserLocationMarker } from "@/lib/mapUserLocation";
 
 interface PropertyLocationMapProps {
   latitude: number;
@@ -74,6 +75,9 @@ const PropertyLocationMap = ({ latitude, longitude, title, address }: PropertyLo
       </div>
     `;
     marker.bindPopup(popupContent).openPopup();
+
+    // Add user location marker
+    addUserLocationMarker(mapInstance.current);
 
     return () => {
       if (mapInstance.current) {

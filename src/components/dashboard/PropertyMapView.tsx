@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader2, MapPin } from "lucide-react";
+import { addUserLocationMarker } from "@/lib/mapUserLocation";
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => string })._getIconUrl;
@@ -89,6 +90,9 @@ const PropertyMapView = ({ properties, onMarkerClick, showUserLocation = false }
     }).addTo(mapRef.current);
 
     setLoading(false);
+
+    // Add user location marker
+    addUserLocationMarker(mapRef.current);
 
     return () => {
       if (mapRef.current) {
