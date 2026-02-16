@@ -132,6 +132,14 @@ const DeveloperDetails = () => {
                 {project.total_units && <p className="text-sm text-muted-foreground mt-1">{project.available_units || 0} وحدة متاحة من {project.total_units}</p>}
                 {project.description && <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{project.description}</p>}
 
+                {/* Financing Options */}
+                <div className="mt-4 pt-4 border-t">
+                  <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/financing')}>
+                    <Building2 className="w-4 h-4" />
+                    عرض خيارات التمويل المتاحة
+                  </Button>
+                </div>
+
                 {/* Request Residential Unit */}
                 {project.available_units && project.available_units > 0 && (
                   <div className="mt-4 pt-4 border-t">
