@@ -7,7 +7,7 @@ interface PasswordStrengthIndicatorProps {
 
 const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
   const requirements = useMemo(() => [
-    { label: '6 أحرف على الأقل', met: password.length >= 6 },
+    { label: '8 أحرف على الأقل', met: password.length >= 8 },
     { label: 'حرف كبير واحد على الأقل (A-Z)', met: /[A-Z]/.test(password) },
     { label: 'حرف صغير واحد على الأقل (a-z)', met: /[a-z]/.test(password) },
     { label: 'رقم واحد على الأقل (0-9)', met: /[0-9]/.test(password) },

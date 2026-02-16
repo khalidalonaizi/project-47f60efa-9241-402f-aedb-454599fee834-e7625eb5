@@ -113,7 +113,7 @@ const FinancingOfferDetails = () => {
       if (data) {
         // Fetch profile name
         const { data: profileData } = await supabase
-          .from('profiles')
+          .from('profiles_public')
           .select('full_name')
           .eq('user_id', data.user_id)
           .single();

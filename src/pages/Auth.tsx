@@ -29,13 +29,13 @@ const forgotPasswordSchema = z.object({
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: 'البريد الإلكتروني غير صالح' }),
-  password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
+  password: z.string().min(8, { message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' }),
 });
 
 const signupSchema = z.object({
   fullName: z.string().trim().min(2, { message: 'الاسم يجب أن يكون حرفين على الأقل' }),
   email: z.string().trim().email({ message: 'البريد الإلكتروني غير صالح' }),
-  password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
+  password: z.string().min(8, { message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' }),
   confirmPassword: z.string(),
   accountType: z.enum(['individual', 'real_estate_office', 'financing_provider', 'appraiser', 'developer'], { 
     required_error: 'يرجى اختيار نوع الحساب' 
@@ -46,7 +46,7 @@ const signupSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
+  password: z.string().min(8, { message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'كلمات المرور غير متطابقة',

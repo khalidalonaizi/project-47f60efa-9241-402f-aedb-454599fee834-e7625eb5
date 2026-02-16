@@ -54,13 +54,12 @@ interface Appraiser {
   id: string;
   user_id: string;
   full_name: string;
-  phone: string | null;
   avatar_url: string | null;
-  license_number: string | null;
   years_of_experience: number | null;
   bio: string | null;
   latitude: number | null;
   longitude: number | null;
+  company_name: string | null;
 }
 
 const Appraisers = () => {
@@ -78,7 +77,7 @@ const Appraisers = () => {
   const fetchAppraisers = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_public')
         .select('*')
         .eq('account_type', 'appraiser');
 
@@ -114,7 +113,6 @@ const Appraisers = () => {
         marker.bindPopup(`
           <div style="direction: rtl; text-align: right; min-width: 150px;">
             <strong>${appraiser.full_name || 'مقيم عقاري'}</strong>
-            ${appraiser.license_number ? `<p style="color: #666; font-size: 12px;">رخصة: ${appraiser.license_number}</p>` : ''}
           </div>
         `);
 
@@ -143,8 +141,7 @@ const Appraisers = () => {
   }, [appraisers, loading, navigate]);
 
   const filteredAppraisers = appraisers.filter(appraiser => 
-    (appraiser.full_name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (appraiser.license_number?.toLowerCase().includes(searchQuery.toLowerCase()))
+    (appraiser.full_name?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (loading) {
@@ -217,12 +214,6 @@ const Appraisers = () => {
                   </Avatar>
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{appraiser.full_name || 'مقيم عقاري'}</h3>
-                    {appraiser.license_number && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                        <Award className="h-4 w-4" />
-                        <span>رخصة: {appraiser.license_number}</span>
-                      </div>
-                    )}
                     {appraiser.years_of_experience && (
                       <Badge variant="secondary" className="mt-2">
                         خبرة {appraiser.years_of_experience} سنوات
@@ -244,13 +235,6 @@ const Appraisers = () => {
                     <ClipboardCheck className="h-4 w-4 ml-2" />
                     طلب تقييم
                   </Button>
-                  {appraiser.phone && (
-                    <Button variant="outline" size="icon" asChild>
-                      <a href={`tel:${appraiser.phone}`}>
-                        <Phone className="h-4 w-4" />
-                      </a>
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>

@@ -47,7 +47,7 @@ const DeveloperDetails = () => {
   }, [id]);
 
   const fetchData = async () => {
-    const { data: dev } = await supabase.from('profiles').select('*').eq('user_id', id).single();
+    const { data: dev } = await supabase.from('profiles_public').select('*').eq('user_id', id).single();
     setDeveloper(dev);
     const { data: projs } = await supabase.from('developer_projects').select('*').eq('user_id', id!).order('created_at', { ascending: false });
     setProjects((projs as any[]) || []);
