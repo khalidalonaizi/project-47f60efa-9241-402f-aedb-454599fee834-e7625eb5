@@ -1017,6 +1017,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles_public: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          avatar_url: string | null
+          bio: string | null
+          company_description: string | null
+          company_logo: string | null
+          company_name: string | null
+          full_name: string | null
+          id: string | null
+          user_id: string | null
+          years_of_experience: number | null
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_description?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          full_name?: string | null
+          id?: string | null
+          user_id?: string | null
+          years_of_experience?: number | null
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          avatar_url?: string | null
+          bio?: string | null
+          company_description?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          full_name?: string | null
+          id?: string | null
+          user_id?: string | null
+          years_of_experience?: number | null
+        }
+        Relationships: []
+      }
       properties_public: {
         Row: {
           address: string | null
