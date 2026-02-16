@@ -71,13 +71,12 @@ interface Appraiser {
   id: string;
   user_id: string;
   full_name: string | null;
-  phone: string | null;
   avatar_url: string | null;
-  license_number: string | null;
   years_of_experience: number | null;
   bio: string | null;
   latitude: number | null;
   longitude: number | null;
+  company_name: string | null;
 }
 
 const localPropertyTypes = propertyTypesSelectAr;
@@ -112,7 +111,7 @@ const AppraiserDetails = () => {
   const fetchAppraiser = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_public')
         .select('*')
         .eq('user_id', id)
         .eq('account_type', 'appraiser')
@@ -260,12 +259,6 @@ const AppraiserDetails = () => {
                     </AvatarFallback>
                   </Avatar>
                   <h2 className="text-xl font-bold">{appraiser.full_name || 'مقيم عقاري'}</h2>
-                  {appraiser.license_number && (
-                    <div className="flex items-center gap-2 text-muted-foreground mt-2">
-                      <Award className="h-4 w-4" />
-                      <span>رخصة: {appraiser.license_number}</span>
-                    </div>
-                  )}
                   {appraiser.years_of_experience && (
                     <Badge variant="secondary" className="mt-3">
                       خبرة {appraiser.years_of_experience} سنوات
@@ -279,16 +272,7 @@ const AppraiserDetails = () => {
                     <p className="text-sm text-muted-foreground">{appraiser.bio}</p>
                   </div>
                 )}
-
-                <div className="mt-6 pt-6 border-t space-y-3">
-                  {appraiser.phone && (
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span dir="ltr">{appraiser.phone}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
+                </CardContent>
             </Card>
 
             {/* Location Map */}

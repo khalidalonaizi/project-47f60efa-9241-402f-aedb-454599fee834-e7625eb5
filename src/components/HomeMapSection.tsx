@@ -121,7 +121,7 @@ const HomeMapSection = () => {
           .not('longitude', 'is', null)
           .limit(100),
         supabase
-          .from('profiles')
+          .from('profiles_public')
           .select('user_id, full_name, company_name, account_type, latitude, longitude')
           .in('account_type', ['real_estate_office', 'appraiser', 'financing_provider'])
           .not('latitude', 'is', null)

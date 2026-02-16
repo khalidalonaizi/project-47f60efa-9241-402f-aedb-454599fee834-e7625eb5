@@ -1031,11 +1031,14 @@ export type Database = {
           account_type: Database["public"]["Enums"]["account_type"] | null
           avatar_url: string | null
           bio: string | null
+          company_address: string | null
           company_description: string | null
           company_logo: string | null
           company_name: string | null
           full_name: string | null
           id: string | null
+          latitude: number | null
+          longitude: number | null
           user_id: string | null
           years_of_experience: number | null
         }
@@ -1043,11 +1046,14 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"] | null
           avatar_url?: string | null
           bio?: string | null
+          company_address?: string | null
           company_description?: string | null
           company_logo?: string | null
           company_name?: string | null
           full_name?: string | null
           id?: string | null
+          latitude?: number | null
+          longitude?: number | null
           user_id?: string | null
           years_of_experience?: number | null
         }
@@ -1055,11 +1061,14 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"] | null
           avatar_url?: string | null
           bio?: string | null
+          company_address?: string | null
           company_description?: string | null
           company_logo?: string | null
           company_name?: string | null
           full_name?: string | null
           id?: string | null
+          latitude?: number | null
+          longitude?: number | null
           user_id?: string | null
           years_of_experience?: number | null
         }

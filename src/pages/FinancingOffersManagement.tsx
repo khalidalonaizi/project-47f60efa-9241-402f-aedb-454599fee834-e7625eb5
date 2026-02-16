@@ -132,7 +132,7 @@ const FinancingOffersManagement = () => {
       if (data) {
         const userIds = [...new Set(data.map(o => o.user_id))];
         const { data: profilesData } = await supabase
-          .from('profiles')
+          .from('profiles_public')
           .select('user_id, full_name')
           .in('user_id', userIds);
 

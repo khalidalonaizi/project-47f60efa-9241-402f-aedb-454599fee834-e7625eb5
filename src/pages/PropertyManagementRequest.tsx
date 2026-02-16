@@ -131,8 +131,8 @@ const PropertyManagementRequest = () => {
   const fetchOffices = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, company_name, company_logo, phone, license_number, company_address, latitude, longitude')
+        .from('profiles_public')
+        .select('user_id, company_name, company_logo, company_address, latitude, longitude')
         .eq('account_type', 'real_estate_office')
         .not('company_name', 'is', null);
 
@@ -143,8 +143,6 @@ const PropertyManagementRequest = () => {
         user_id: office.user_id,
         company_name: office.company_name || 'مكتب عقاري',
         company_logo: office.company_logo,
-        phone: office.phone,
-        license_number: office.license_number,
         company_address: office.company_address,
         latitude: office.latitude,
         longitude: office.longitude,
