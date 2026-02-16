@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { saudiCityNamesAr } from '@/lib/propertyTypes';
+import { saudiCityNamesAr, propertyTypesSelectAr } from '@/lib/propertyTypes';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -46,14 +46,7 @@ const amenitiesList = [
 
 const cities = saudiCityNamesAr;
 
-const propertyTypes = [
-  { value: 'apartment', label: 'شقة' },
-  { value: 'villa', label: 'فيلا' },
-  { value: 'land', label: 'أرض' },
-  { value: 'building', label: 'عمارة' },
-  { value: 'office', label: 'مكتب' },
-  { value: 'shop', label: 'محل تجاري' },
-];
+const localPropertyTypes = propertyTypesSelectAr;
 
 const AddProperty = () => {
   const [title, setTitle] = useState('');
@@ -221,7 +214,7 @@ const AddProperty = () => {
                       <SelectValue placeholder="نوع العقار" />
                     </SelectTrigger>
                     <SelectContent>
-                      {propertyTypes.map((type) => (
+                      {localPropertyTypes.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}
                         </SelectItem>

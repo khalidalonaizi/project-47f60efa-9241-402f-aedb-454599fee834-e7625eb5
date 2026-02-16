@@ -21,6 +21,12 @@ export const propertyTypes = [
   { value: 'shop', labelAr: 'محل', labelEn: 'Shop' },
 ];
 
+// Simple {value, label} format for dropdowns (Arabic)
+export const propertyTypesSelectAr = propertyTypes.map(t => ({ value: t.value, label: t.labelAr }));
+
+// With "all" option for filter dropdowns
+export const propertyTypesFilterAr = [{ value: 'all', label: 'جميع الأنواع' }, ...propertyTypesSelectAr];
+
 export const getPropertyTypeLabel = (value: string, language: 'ar' | 'en' = 'ar'): string => {
   const type = propertyTypes.find(t => t.value === value);
   if (!type) return value;

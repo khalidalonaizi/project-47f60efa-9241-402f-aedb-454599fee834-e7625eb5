@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { saudiCityNamesAr } from '@/lib/propertyTypes';
+import { saudiCityNamesAr, propertyTypesSelectAr } from '@/lib/propertyTypes';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -295,18 +295,7 @@ const SearchPage = () => {
 
   const cities = saudiCityNamesAr;
 
-  const propertyTypes = [
-    { value: "apartment", label: "شقة" },
-    { value: "villa", label: "فيلا" },
-    { value: "duplex", label: "دوبلكس" },
-    { value: "townhouse", label: "تاون هاوس" },
-    { value: "land", label: "أرض" },
-    { value: "office", label: "مكتب" },
-    { value: "commercial", label: "محل تجاري" },
-    { value: "warehouse", label: "مستودع" },
-    { value: "shop", label: "محل تجاري" },
-    { value: "building", label: "عمارة" },
-  ];
+  const localPropertyTypes = propertyTypesSelectAr;
 
   const amenities = [
     { id: "parking", label: "موقف سيارات" },
@@ -525,7 +514,7 @@ const SearchPage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">الكل</SelectItem>
-                        {propertyTypes.map((type) => (
+                        {localPropertyTypes.map((type) => (
                           <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                         ))}
                       </SelectContent>

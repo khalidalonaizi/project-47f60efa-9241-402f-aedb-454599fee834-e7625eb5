@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { propertyTypesSelectAr } from '@/lib/propertyTypes';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,14 +18,7 @@ interface FinancingRequestFormProps {
   companyName: string;
 }
 
-const propertyTypes = [
-  { value: 'apartment', label: 'شقة' },
-  { value: 'villa', label: 'فيلا' },
-  { value: 'land', label: 'أرض' },
-  { value: 'building', label: 'عمارة' },
-  { value: 'office', label: 'مكتب' },
-  { value: 'shop', label: 'محل تجاري' },
-];
+const localPropertyTypes = propertyTypesSelectAr;
 
 const FinancingRequestForm = ({ offerId, providerId, companyName }: FinancingRequestFormProps) => {
   const { user } = useAuth();
@@ -134,7 +128,7 @@ const FinancingRequestForm = ({ offerId, providerId, companyName }: FinancingReq
                   <SelectValue placeholder="اختر نوع العقار" />
                 </SelectTrigger>
                 <SelectContent>
-                  {propertyTypes.map((t) => (
+                  {localPropertyTypes.map((t) => (
                     <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                   ))}
                 </SelectContent>

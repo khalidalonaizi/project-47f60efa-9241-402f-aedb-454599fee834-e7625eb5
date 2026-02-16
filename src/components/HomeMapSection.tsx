@@ -10,7 +10,7 @@ import MapLegend from "@/components/MapLegend";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { addUserLocationMarker } from "@/lib/mapUserLocation";
-import { saudiCitiesSelectOptions } from "@/lib/propertyTypes";
+import { saudiCitiesSelectOptions, propertyTypesFilterAr } from "@/lib/propertyTypes";
 
 interface Property {
   id: string;
@@ -60,15 +60,7 @@ L.Icon.Default.mergeOptions({
 
 const cities = saudiCitiesSelectOptions;
 
-const propertyTypes = [
-  { value: "all", label: "جميع الأنواع" },
-  { value: "apartment", label: "شقة" },
-  { value: "villa", label: "فيلا" },
-  { value: "land", label: "أرض" },
-  { value: "building", label: "عمارة" },
-  { value: "office", label: "مكتب" },
-  { value: "shop", label: "محل تجاري" },
-];
+const localPropertyTypes = propertyTypesFilterAr;
 
 const HomeMapSection = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -362,7 +354,7 @@ const HomeMapSection = () => {
                   <SelectValue placeholder="نوع العقار" />
                 </SelectTrigger>
                 <SelectContent>
-                  {propertyTypes.map(type => (
+                  {localPropertyTypes.map(type => (
                     <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                   ))}
                 </SelectContent>
