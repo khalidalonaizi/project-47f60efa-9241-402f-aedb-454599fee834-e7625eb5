@@ -14,6 +14,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PropertyMapView from "@/components/dashboard/PropertyMapView";
 import LogoUpload from "@/components/LogoUpload";
 import LocationPicker from "@/components/LocationPicker";
+import ProfileCompletionAlert from "@/components/ProfileCompletionAlert";
 import {
   Landmark,
   Plus,
@@ -280,6 +281,11 @@ const FinancingDashboard = () => {
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsContent value="overview" className="space-y-6">
+          {(() => {
+            const missing: string[] = [];
+            if (offers.length === 0) missing.push('عرض تمويلي واحد على الأقل');
+            return <ProfileCompletionAlert missingFields={missing} onGoToProfile={() => { setActiveTab("offers"); setShowAddForm(true); }} accountTypeLabel="جهة التمويل" />;
+          })()}
           {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
