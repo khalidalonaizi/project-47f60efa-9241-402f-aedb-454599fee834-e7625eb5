@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Home, Loader2, X, Building2, Eye, Filter } from "lucide-react";
+import { MapPin, Home, Loader2, X, Building2, Eye, Filter, LocateFixed } from "lucide-react";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { addUserLocationMarker } from "@/lib/mapUserLocation";
 
 interface Property {
   id: string;
@@ -79,6 +80,7 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedListing, setSelectedListing] = useState("all");
+  const userMarkerRef = useRef<L.Marker | null>(null);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ar-SA").format(price);
@@ -183,6 +185,10 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
         }, 100);
 
         setMapReady(true);
+        // Add user location marker
+        addUserLocationMarker(mapInstance.current).then(marker => {
+          userMarkerRef.current = marker;
+        });
       } catch (error) {
         console.error('Error initializing map:', error);
       }
@@ -377,6 +383,27 @@ const MapSearch = ({ onClose }: MapSearchProps) => {
                 <span className="text-muted-foreground">مكاتب عقارية</span>
               </div>
             </div>
+
+            {/* Locate Me Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute bottom-4 left-4 z-[1000] bg-card shadow-lg h-10 w-10"
+              onClick={() => {
+                if (mapInstance.current) {
+                  addUserLocationMarker(mapInstance.current, userMarkerRef.current).then(marker => {
+                    userMarkerRef.current = marker;
+                    if (marker) {
+                      const pos = marker.getLatLng();
+                      mapInstance.current?.setView(pos, 13);
+                      marker.openPopup();
+                    }
+                  });
+                }
+              }}
+            >
+              <LocateFixed className="w-5 h-5" />
+            </Button>
 
             {/* Stats */}
             <div className="absolute top-4 left-4 bg-card rounded-lg shadow-lg p-3 z-[1000]">

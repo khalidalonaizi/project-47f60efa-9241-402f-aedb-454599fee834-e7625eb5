@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Home, Loader2, Search, Building2, Eye, Filter, X, HardHat } from "lucide-react";
+import { MapPin, Home, Loader2, Search, Building2, Eye, Filter, X, HardHat, LocateFixed } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import MapLegend from "@/components/MapLegend";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { addUserLocationMarker } from "@/lib/mapUserLocation";
 
 interface Property {
   id: string;
@@ -90,6 +91,7 @@ const HomeMapSection = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [selectedDevProject, setSelectedDevProject] = useState<DeveloperProject | null>(null);
+  const userMarkerRef = useRef<L.Marker | null>(null);
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedListing, setSelectedListing] = useState("all");
@@ -202,6 +204,10 @@ const HomeMapSection = () => {
         }).addTo(mapInstance.current);
         setTimeout(() => mapInstance.current?.invalidateSize(), 100);
         setMapReady(true);
+        // Add user location marker automatically
+        addUserLocationMarker(mapInstance.current).then(marker => {
+          userMarkerRef.current = marker;
+        });
       } catch (error) {
         console.error('Error initializing map:', error);
       }
@@ -411,6 +417,27 @@ const HomeMapSection = () => {
 
                 {/* Legend */}
                 <MapLegend items={legendItems} className="absolute top-4 right-4 z-[1000]" />
+
+                {/* Locate Me Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute bottom-4 left-4 z-[1000] bg-card shadow-lg h-10 w-10"
+                  onClick={() => {
+                    if (mapInstance.current) {
+                      addUserLocationMarker(mapInstance.current, userMarkerRef.current).then(marker => {
+                        userMarkerRef.current = marker;
+                        if (marker) {
+                          const pos = marker.getLatLng();
+                          mapInstance.current?.setView(pos, 13);
+                          marker.openPopup();
+                        }
+                      });
+                    }
+                  }}
+                >
+                  <LocateFixed className="w-5 h-5" />
+                </Button>
 
                 {/* Stats */}
                 <div className="absolute top-4 left-4 bg-card rounded-lg shadow-lg p-3 z-[1000]">
