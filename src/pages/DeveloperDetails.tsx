@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { HardHat, MapPin, Building2, Loader2, ArrowRight, Lightbulb, Leaf, Sparkles, Heart, Phone, Mail, MessageCircle } from 'lucide-react';
+import SocialShareButtons from '@/components/SocialShareButtons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -75,7 +76,14 @@ const DeveloperDetails = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-8">
-        <Button variant="ghost" onClick={() => navigate('/developers')} className="mb-6"><ArrowRight className="h-4 w-4 ml-1" />العودة للمطورين</Button>
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" onClick={() => navigate('/developers')}><ArrowRight className="h-4 w-4 ml-1" />العودة للمطورين</Button>
+          <SocialShareButtons
+            url={window.location.href}
+            title={developer.company_name || developer.full_name || 'مطوّر عقاري'}
+            description={developer.company_description || `${projects.length} مشاريع تطوير عقاري`}
+          />
+        </div>
 
         {/* Developer Header */}
         <div className="bg-gradient-to-l from-primary/10 via-primary/5 to-transparent rounded-2xl p-8 mb-8">

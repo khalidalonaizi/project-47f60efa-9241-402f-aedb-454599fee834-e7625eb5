@@ -99,6 +99,11 @@ const LocationPicker = ({ latitude, longitude, onLocationChange, autoDetectLocat
 
     setMapReady(true);
 
+    // Fix gray tiles by invalidating size after render
+    setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 200);
+
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
