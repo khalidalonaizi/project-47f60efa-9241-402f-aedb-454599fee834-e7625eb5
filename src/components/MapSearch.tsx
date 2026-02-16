@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Home, Loader2, X, Building2, Eye, Filter, LocateFixed } from "lucide-react";
 import { Link } from "react-router-dom";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { addUserLocationMarker } from "@/lib/mapUserLocation";
+import { saudiCitiesSelectOptions } from "@/lib/propertyTypes";
 
 interface Property {
   id: string;
@@ -46,16 +46,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-const cities = [
-  { value: "all", label: "جميع المدن" },
-  { value: "الرياض", label: "الرياض" },
-  { value: "جدة", label: "جدة" },
-  { value: "الدمام", label: "الدمام" },
-  { value: "مكة المكرمة", label: "مكة المكرمة" },
-  { value: "المدينة المنورة", label: "المدينة المنورة" },
-  { value: "الخبر", label: "الخبر" },
-  { value: "الطائف", label: "الطائف" },
-];
+const cities = saudiCitiesSelectOptions;
 
 const propertyTypes = [
   { value: "all", label: "جميع الأنواع" },

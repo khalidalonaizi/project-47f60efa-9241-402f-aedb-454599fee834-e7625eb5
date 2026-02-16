@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { saudiCityNamesAr } from '@/lib/propertyTypes';
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -42,26 +43,7 @@ interface PriceAlert {
   created_at: string;
 }
 
-const cities = [
-  "الرياض",
-  "جدة",
-  "مكة المكرمة",
-  "المدينة المنورة",
-  "الدمام",
-  "الخبر",
-  "الظهران",
-  "الأحساء",
-  "الطائف",
-  "تبوك",
-  "بريدة",
-  "خميس مشيط",
-  "حائل",
-  "نجران",
-  "جازان",
-  "ينبع",
-  "أبها",
-  "الجبيل",
-];
+const cities = saudiCityNamesAr;
 
 const propertyTypes = [
   { value: "apartment", label: "شقة" },
