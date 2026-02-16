@@ -29,7 +29,8 @@ import {
   Download,
   FileSpreadsheet,
   Image as ImageIcon,
-  Monitor
+  Monitor,
+  HardHat
 } from 'lucide-react';
 import {
   Select,
@@ -45,6 +46,7 @@ import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from
 import { ar } from 'date-fns/locale';
 import AdminAdvertisements from '@/components/AdminAdvertisements';
 import AdminAdMob from '@/components/AdminAdMob';
+import AdminDeveloperProjects from '@/components/AdminDeveloperProjects';
 
 interface Property {
   id: string;
@@ -96,7 +98,7 @@ const Admin = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'users' | 'advertisements' | 'admob'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'users' | 'advertisements' | 'admob' | 'developer_projects'>('overview');
   const { toast } = useToast();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -632,6 +634,14 @@ const Admin = () => {
                   الإعلانات المميزة
                 </Button>
               </Link>
+              <Button 
+                variant={activeTab === 'developer_projects' ? 'secondary' : 'ghost'} 
+                className="w-full justify-start gap-2"
+                onClick={() => setActiveTab('developer_projects')}
+              >
+                <HardHat className="h-4 w-4 text-orange-500" />
+                مشاريع المطورين
+              </Button>
               <Link to="/admin/financing-offers">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Building2 className="h-4 w-4 text-emerald-600" />
@@ -692,6 +702,14 @@ const Admin = () => {
                 العروض التمويلية
               </Button>
             </Link>
+            <Button 
+              variant={activeTab === 'developer_projects' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setActiveTab('developer_projects')}
+            >
+              <HardHat className="h-4 w-4 ml-1" />
+              مشاريع المطورين
+            </Button>
           </div>
 
           {/* Overview Tab */}
@@ -1269,6 +1287,10 @@ const Admin = () => {
           {/* AdMob Tab */}
           {activeTab === 'admob' && (
             <AdminAdMob />
+          )}
+          {/* Developer Projects Tab */}
+          {activeTab === 'developer_projects' && (
+            <AdminDeveloperProjects />
           )}
         </main>
       </div>
