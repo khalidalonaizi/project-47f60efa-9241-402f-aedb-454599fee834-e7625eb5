@@ -400,6 +400,33 @@ const FinancingOfferPublicDetails = () => {
                   </div>
                 )}
 
+                {/* Financing Options */}
+                <div>
+                  <h3 className="font-semibold mb-3">خيارات التمويل المتاحة</h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="border rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      <Building2 className="h-5 w-5 text-primary mb-2" />
+                      <p className="font-medium text-sm">تمويل شراء جاهز</p>
+                      <p className="text-xs text-muted-foreground mt-1">لشراء عقار جاهز للسكن</p>
+                    </div>
+                    <div className="border rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      <Building2 className="h-5 w-5 text-primary mb-2" />
+                      <p className="font-medium text-sm">تمويل البناء الذاتي</p>
+                      <p className="text-xs text-muted-foreground mt-1">لبناء عقارك على أرضك</p>
+                    </div>
+                    <div className="border rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      <Building2 className="h-5 w-5 text-primary mb-2" />
+                      <p className="font-medium text-sm">تمويل شراء أرض</p>
+                      <p className="text-xs text-muted-foreground mt-1">لشراء أرض سكنية</p>
+                    </div>
+                    <div className="border rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      <Building2 className="h-5 w-5 text-primary mb-2" />
+                      <p className="font-medium text-sm">إعادة التمويل</p>
+                      <p className="text-xs text-muted-foreground mt-1">نقل تمويلك بشروط أفضل</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                   <span className="text-muted-foreground">الحد الأقصى للاستقطاع:</span>
                   <span className="font-bold">{offer.max_dti}%</span>

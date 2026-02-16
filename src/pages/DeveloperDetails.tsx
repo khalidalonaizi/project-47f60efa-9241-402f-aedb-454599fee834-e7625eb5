@@ -132,6 +132,27 @@ const DeveloperDetails = () => {
                 {project.total_units && <p className="text-sm text-muted-foreground mt-1">{project.available_units || 0} وحدة متاحة من {project.total_units}</p>}
                 {project.description && <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{project.description}</p>}
 
+                {/* Request Residential Unit */}
+                {project.available_units && project.available_units > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm font-semibold mb-2">طلب وحدة سكنية</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['شقة', 'فيلا', 'تاون هوس', 'دوبلكس', 'ستديو'].map((unitType) => (
+                        <a
+                          key={unitType}
+                          href={`https://wa.me/${project.contact_whatsapp || project.contact_phone || ''}?text=${encodeURIComponent(`أرغب في طلب وحدة سكنية (${unitType}) في مشروع ${project.title}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors"
+                        >
+                          <Building2 className="w-3 h-3" />
+                          {unitType}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Contact Info */}
                 {(project.contact_phone || project.contact_email || project.contact_whatsapp) && (
                   <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">

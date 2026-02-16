@@ -358,10 +358,10 @@ const PropertyManagementRequest = () => {
             </Card>
           </div>
 
-          {/* Office Details */}
-          <div>
+          {/* Office Sidebar */}
+          <div className="space-y-4">
             {selectedOffice ? (
-              <Card>
+              <Card className="border-primary">
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     {selectedOffice.company_logo ? (
@@ -410,14 +410,56 @@ const PropertyManagementRequest = () => {
               </Card>
             ) : (
               <Card>
-                <CardContent className="py-12 text-center">
-                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    اختر مكتباً من الخريطة لعرض تفاصيله
+                <CardContent className="py-8 text-center">
+                  <Building2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    اختر مكتباً من الخريطة أو القائمة أدناه
                   </p>
                 </CardContent>
               </Card>
             )}
+
+            {/* Office List */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">قائمة المكاتب ({offices.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="max-h-[300px] overflow-y-auto divide-y">
+                  {offices.map((office) => (
+                    <button
+                      key={office.id}
+                      onClick={() => {
+                        setSelectedOffice(office);
+                        if (mapRef.current && office.latitude && office.longitude) {
+                          mapRef.current.setView([office.latitude, office.longitude], 14);
+                        }
+                      }}
+                      className={`w-full text-right p-3 hover:bg-muted/50 transition-colors flex items-center gap-3 ${
+                        selectedOffice?.id === office.id ? 'bg-primary/5 border-r-2 border-primary' : ''
+                      }`}
+                    >
+                      {office.company_logo ? (
+                        <img src={office.company_logo} alt="" className="w-10 h-10 rounded-lg object-contain border p-0.5 shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Building2 className="h-5 w-5 text-primary" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{office.company_name}</p>
+                        {office.company_address && (
+                          <p className="text-xs text-muted-foreground truncate">{office.company_address}</p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                  {offices.length === 0 && (
+                    <p className="text-center text-muted-foreground text-sm py-6">لا توجد مكاتب مسجلة</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
