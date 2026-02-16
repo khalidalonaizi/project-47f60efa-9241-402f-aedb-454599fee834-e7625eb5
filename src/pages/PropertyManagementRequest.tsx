@@ -25,7 +25,8 @@ import {
   ChevronLeft, 
   Star,
   User,
-  CheckCircle
+  CheckCircle,
+  Search
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -88,6 +89,7 @@ const PropertyManagementRequest = () => {
   const { toast } = useToast();
 
   const [offices, setOffices] = useState<RealEstateOffice[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedOffice, setSelectedOffice] = useState<RealEstateOffice | null>(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -423,10 +425,28 @@ const PropertyManagementRequest = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">قائمة المكاتب ({offices.length})</CardTitle>
+                <div className="relative mt-2">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="ابحث بالاسم أو العنوان..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-9"
+                  />
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-[300px] overflow-y-auto divide-y">
-                  {offices.map((office) => (
+                  {offices
+                    .filter((o) => {
+                      if (!searchQuery.trim()) return true;
+                      const q = searchQuery.trim().toLowerCase();
+                      return (
+                        o.company_name.toLowerCase().includes(q) ||
+                        (o.company_address && o.company_address.toLowerCase().includes(q))
+                      );
+                    })
+                    .map((office) => (
                     <button
                       key={office.id}
                       onClick={() => {
