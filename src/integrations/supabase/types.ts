@@ -1044,40 +1044,6 @@ export type Database = {
           user_id: string | null
           years_of_experience: number | null
         }
-        Insert: {
-          account_type?: Database["public"]["Enums"]["account_type"] | null
-          avatar_url?: string | null
-          bio?: string | null
-          company_address?: string | null
-          company_description?: string | null
-          company_logo?: string | null
-          company_name?: string | null
-          full_name?: string | null
-          id?: string | null
-          latitude?: number | null
-          license_number?: string | null
-          longitude?: number | null
-          phone?: string | null
-          user_id?: string | null
-          years_of_experience?: number | null
-        }
-        Update: {
-          account_type?: Database["public"]["Enums"]["account_type"] | null
-          avatar_url?: string | null
-          bio?: string | null
-          company_address?: string | null
-          company_description?: string | null
-          company_logo?: string | null
-          company_name?: string | null
-          full_name?: string | null
-          id?: string | null
-          latitude?: number | null
-          license_number?: string | null
-          longitude?: number | null
-          phone?: string | null
-          user_id?: string | null
-          years_of_experience?: number | null
-        }
         Relationships: []
       }
       properties_public: {
@@ -1154,6 +1120,26 @@ export type Database = {
       }
     }
     Functions: {
+      get_public_profiles: {
+        Args: never
+        Returns: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          avatar_url: string
+          bio: string
+          company_address: string
+          company_description: string
+          company_logo: string
+          company_name: string
+          full_name: string
+          id: string
+          latitude: number
+          license_number: string
+          longitude: number
+          phone: string
+          user_id: string
+          years_of_experience: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
