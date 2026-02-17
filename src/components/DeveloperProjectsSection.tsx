@@ -42,6 +42,22 @@ const DeveloperProjectsSection = () => {
       setLoading(false);
     };
     fetchProjects();
+
+    // Listen for realtime changes (insert, update, delete)
+    const channel = supabase
+      .channel('developer-projects-homepage')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'developer_projects' },
+        () => {
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const formatPrice = (price: number) => new Intl.NumberFormat("ar-SA").format(price);

@@ -161,6 +161,30 @@ const HomeMapSection = () => {
       setLoading(false);
     };
     fetchData();
+
+    // Listen for realtime changes on properties and developer_projects
+    const propertiesChannel = supabase
+      .channel('properties-map-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'properties' },
+        () => { fetchData(); }
+      )
+      .subscribe();
+
+    const devProjectsChannel = supabase
+      .channel('dev-projects-map-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'developer_projects' },
+        () => { fetchData(); }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(propertiesChannel);
+      supabase.removeChannel(devProjectsChannel);
+    };
   }, []);
 
   const filteredProperties = useMemo(() => properties.filter(property => {
