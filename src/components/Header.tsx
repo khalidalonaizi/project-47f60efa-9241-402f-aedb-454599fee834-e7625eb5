@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List, MessageSquare, LayoutDashboard } from "lucide-react";
+import { Building2, Heart, Menu, Phone, User, X, LogOut, Shield, Plus, List, MessageSquare, LayoutDashboard, Moon, Sun, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,11 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import NotificationBell from "@/components/NotificationBell";
+import { useTheme } from "next-themes";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [accountType, setAccountType] = useState<string | null>(null);
 
   // Get user account type for dashboard routing
@@ -108,12 +112,34 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="hidden md:flex"
+              title={theme === "dark" ? "الوضع النهاري" : "الوضع الليلي"}
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
+              className="hidden md:flex"
+              title={language === "ar" ? "English" : "العربية"}
+            >
+              <Globe className="w-4 h-4" />
+            </Button>
+
             <a 
               href="tel:+966500000000" 
               className="hidden md:flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
             >
               <Phone className="w-4 h-4" />
-              <span className="text-sm">اتصل بنا</span>
+              <span className="text-sm">{language === "ar" ? "اتصل بنا" : "Contact Us"}</span>
             </a>
             
             {user && (
@@ -292,6 +318,26 @@ const Header = () => {
                 </>
               )}
               
+              {/* Mobile Theme & Language Toggles */}
+              <div className="flex gap-2 px-4 mt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {theme === "dark" ? "نهاري" : "ليلي"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={() => setLanguage(language === "ar" ? "en" : "ar")}
+                >
+                  <Globe className="w-4 h-4" />
+                  {language === "ar" ? "English" : "العربية"}
+                </Button>
+              </div>
+
               <div className="flex gap-2 mt-4 px-4">
                 {user ? (
                   <>
