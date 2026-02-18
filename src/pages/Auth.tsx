@@ -63,7 +63,7 @@ const Auth = () => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
-  const [signupAccountType, setSignupAccountType] = useState<string>('');
+  const [signupAccountType, setSignupAccountType] = useState<string>('individual');
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -216,6 +216,10 @@ const Auth = () => {
       let message = 'حدث خطأ أثناء إنشاء الحساب';
       if (error.message.includes('already registered')) {
         message = 'هذا البريد الإلكتروني مسجل بالفعل';
+      } else if (error.message.includes('weak_password') || error.message.includes('weak') || error.message.includes('pwned')) {
+        message = 'كلمة المرور ضعيفة أو مسربة في قوائم الاختراقات. يرجى اختيار كلمة مرور أقوى ومختلفة.';
+      } else if (error.message.includes('signup_disabled') || error.message.includes('Signups not allowed')) {
+        message = 'التسجيل معطل حالياً. يرجى التواصل مع الإدارة.';
       }
       toast({
         title: 'خطأ',
